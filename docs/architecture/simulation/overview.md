@@ -25,8 +25,8 @@ both folders.
 ```
 sim/
 ├── apps/
-│   └── graace_sim_main.cc      main() — the program entry point
-├── include/                    class headers (.hh)
+│   └── graace_sim_main.cc            main() — the program entry point
+├── include/                          class headers (.hh)
 │   ├── ActionInitialization.hh       declares the class that registers the source generator and the actions
 │   ├── DetectorConstruction.hh       declares the class that builds the world from the configured values
 │   ├── SensitiveDetector.hh          declares the class that records gamma hits in the detector volumes
@@ -39,7 +39,7 @@ sim/
 │   ├── SimIO.hh                      declares the class that writes the recorded data to Parquet
 │   ├── seed.hh                       declares the class that handles the random seed
 │   └── utils.hh                      declares small shared helpers
-├── src/                        class implementations (.cc)
+├── src/                              class implementations (.cc)
 │   ├── ActionInitialization.cc       registers the source generator and the actions
 │   ├── DetectorConstruction.cc       builds the world from the configured values
 │   ├── SensitiveDetector.cc          records gamma hits in the detector volumes
@@ -52,9 +52,9 @@ sim/
 │   ├── SimIO.cc                      writes the recorded data to Parquet
 │   ├── seed.cc                       random seed handling
 │   └── utils.cc                      small shared helpers
-├── macros/                     hand-written macros for visualization and manual runs
-├── tests/                      C++ engine tests
-└── CMakeLists.txt              the build definition
+├── macros/                           hand-written macros for visualization and manual runs
+├── tests/                            C++ engine tests
+└── CMakeLists.txt                    the build definition
 ```
 
 The groupings (`geometry`, `source and actions`, …) are for reading only — the
