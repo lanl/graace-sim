@@ -26,8 +26,9 @@ G4bool SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory*)
     return false;
   }
 
-  if (fEnergyDeposit == 0.) {
-    fEarliestTime = step->GetPreStepPoint()->GetGlobalTime();
+  const G4double time = step->GetPreStepPoint()->GetGlobalTime();
+  if (fEnergyDeposit == 0. || time < fEarliestTime) {
+    fEarliestTime = time;
   }
   fEnergyDeposit += edep;
   return true;
