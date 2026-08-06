@@ -17,6 +17,15 @@ pyarrow = "*"
 pandas = "*"
 matplotlib = "*"
 python = "*"
+pydantic = ">=2"
+pyyaml = "*"
+loguru = "*"
+pytest = "*"
+
+[tasks.test]
+description = "Run the Python test suite"
+cmd = "pytest"
+env = { PYTHONPATH = "src" }
 
 [tasks.build-sim]
 description = "Configure and compile the GEANT4 engine into build/"

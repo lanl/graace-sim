@@ -57,18 +57,21 @@ class Size3Mm(StrictModel):
 ## The top-level model
 
 `Simulation` is a flat composition of the parts of an experiment. Required parts
-have no default; optional parts are `X | None = None`.
+have no default; optional parts are `X | None = None`. `source`, `detectors`,
+`run`, and `metadata` are required. `sample` is optional (a setup may have no
+sample), and `shielding` defaults to an empty list.
 
 ```python
 class Simulation(StrictModel):
     """Top-level GRAACE-SIM configuration and run record."""
 
     source: Source
-    sample: Sample
+    sample: Sample | None = None
     detectors: list[Detector]
     shielding: list[Shielding] = []
     run: RunSettings
     metadata: Metadata
+    environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
 ```
 
 Each part is defined in its own file under `src/models/` and imported here.
@@ -265,22 +268,54 @@ class RunSettings(StrictModel):
 
 ### Metadata (`metadata.py`)
 
-Bookkeeping and the run's identity: author, date, description, a run identifier,
-and where output goes. The run's directory is `<run_id>_<NNN>` (for example
-`example_000`) under the output directory.
+Bookkeeping for a run: who made it, when, and what it is. Where the run's files
+live is a separate concern, handled by `WorkingEnvironment` below.
 
 ```python
 class Metadata(StrictModel):
     author: str = Field(min_length=1)
     date: str = Field(min_length=1)
     description: str = Field(min_length=1)
+```
+
+### WorkingEnvironment (`environment.py`)
+
+The run's identity and where its files live. These are computed paths only —
+nothing here touches the filesystem; creating the directories is the runner's
+job. The run directory is `<run_id>_<run_sub_number>` (for example `example_000`) under the
+working directory, with fixed `logs/` and `results/` sub-directories and the
+exact macro that ran alongside them.
+
+```python
+class WorkingEnvironment(StrictModel):
+    working_directory: Path = Field(default=Path("data"))
     run_id: str = Field(default="example", min_length=1)
     sub_run: int = Field(default=0, ge=0, le=9999)
-    output_directory: str = Field(default="data", min_length=1)
 
     @property
     def run_directory(self) -> Path:
-        return Path(self.output_directory) / f"{self.run_id}_{self.sub_run:03d}"
+        return self.working_directory / f"{self.run_id}_{self.sub_run:03d}"
+
+    @property
+    def log_directory(self) -> Path:
+        return self.run_directory / "logs"
+
+    @property
+    def results_directory(self) -> Path:
+        return self.run_directory / "results"
+
+    @property
+    def macro_file(self) -> Path:
+        return self.run_directory / f"{self.run_id}.mac"
+```
+
+The layout is:
+
+```
+<working_directory>/<run_id>_<run_sub_number>/            the run directory
+<working_directory>/<run_id>_<run_sub_number>/logs/       summary and log files
+<working_directory>/<run_id>_<run_sub_number>/results/    gamma hit Parquet files
+<working_directory>/<run_id>_<run_sub_number>/<run_id>.mac the exact macro that ran
 ```
 
 ## Conventions

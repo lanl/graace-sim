@@ -1,5 +1,7 @@
 .agent/
-build/
-data/
 .pixi/
 .scratch/
+
+# Python
+__pycache__/
+*.py[cod]
