@@ -71,7 +71,13 @@ void SimIO::Write()
   // Make sure the output directory exists.
   std::filesystem::path outPath(fPath.c_str());
   if (outPath.has_parent_path()) {
-    std::filesystem::create_directories(outPath.parent_path());
+    try {
+      std::filesystem::create_directories(outPath.parent_path());
+    } catch (const std::filesystem::filesystem_error& e) {
+      G4cerr << "SimIO: could not create output directory " << outPath.parent_path()
+             << ": " << e.what() << G4endl;
+      return;
+    }
   }
 
   auto outfileResult = arrow::io::FileOutputStream::Open(fPath);
