@@ -42,8 +42,8 @@ metadata:
   date: "2026-08-06"
   description: DT generator irradiating an iron sample with a single HPGe detector.
 
-# --- Paths: where this run's files live ---
-paths:
+# --- Environment: the run's identity and where its files live ---
+environment:
   working_directory: data
   run_id: example
   sub_run: 0
