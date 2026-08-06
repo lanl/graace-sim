@@ -48,9 +48,18 @@ void SimIO::Write()
   }
 
   std::shared_ptr<arrow::Array> detectorArray, energyArray, timeArray;
-  detectorBuilder.Finish(&detectorArray).ok();
-  energyBuilder.Finish(&energyArray).ok();
-  timeBuilder.Finish(&timeArray).ok();
+  if (auto st = detectorBuilder.Finish(&detectorArray); !st.ok()) {
+    G4cerr << "SimIO: failed to finish detector column: " << st.ToString() << G4endl;
+    return;
+  }
+  if (auto st = energyBuilder.Finish(&energyArray); !st.ok()) {
+    G4cerr << "SimIO: failed to finish energy column: " << st.ToString() << G4endl;
+    return;
+  }
+  if (auto st = timeBuilder.Finish(&timeArray); !st.ok()) {
+    G4cerr << "SimIO: failed to finish time column: " << st.ToString() << G4endl;
+    return;
+  }
 
   auto schema = arrow::schema({
     arrow::field("detector", arrow::utf8()),
