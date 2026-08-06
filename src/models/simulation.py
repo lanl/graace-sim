@@ -18,7 +18,7 @@ class Simulation(StrictModel):
     A flat composition of the parts of one experiment. ``source``,
     ``detectors``, ``run``, and ``metadata`` are required. ``sample`` is optional
     (a setup may have no sample), ``shielding`` defaults to an empty list, and
-    ``paths`` defaults to a run named ``example`` under ``data/``.
+    ``environment`` defaults to a run named ``example`` under ``data/``.
     """
 
     source: Source
