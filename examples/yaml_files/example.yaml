@@ -1,0 +1,46 @@
+# Example configuration: a 14.1 MeV DT neutron source irradiates an iron sample
+# and a single HPGe detector records the resulting gamma hits. This mirrors
+# sim/macros/example.mac so the Python layer and the engine describe the same
+# experiment.
+
+# --- Source: 14.1 MeV (DT generator) neutrons, starting 50 mm before the sample ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -50}
+  energy:
+    type: mono
+    mono_mev: 14.1
+
+# --- Sample: an iron cylinder (radius 10 mm, height 20 mm) at the origin ---
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 10      # cylinder radius
+  height_mm: 20    # cylinder height
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Detector: an HPGe crystal beside the sample ---
+# The engine models the crystal as a cylinder (radius 30 mm, height 50 mm); here
+# dimension_mm is its bounding box (60 x 60 x 50 mm).
+detectors:
+  - type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+run:
+  neutrons: 10000
+
+# --- Metadata: who, when, and where output goes ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-08-06"
+  description: DT generator irradiating an iron sample with a single HPGe detector.
+  run_id: example
+  sub_run: 0
+  output_directory: data
