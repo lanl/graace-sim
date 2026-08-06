@@ -13,7 +13,7 @@
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4VisAttributes.hh"
-
+#include "G4ios.hh"
 G4Material* DetectorConstruction::BuildSampleMaterial()
 {
   const Config& config = Config::Instance();
