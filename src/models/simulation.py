@@ -1,8 +1,11 @@
 """The top-level configuration and run record: one experiment as a whole."""
 
+from pydantic import Field
+
 from models.base import StrictModel
 from models.detector import Detector
 from models.metadata import Metadata
+from models.environment import WorkingEnvironment
 from models.run import RunSettings
 from models.sample import Sample
 from models.shielding import Shielding
@@ -14,7 +17,8 @@ class Simulation(StrictModel):
 
     A flat composition of the parts of one experiment. ``source``,
     ``detectors``, ``run``, and ``metadata`` are required. ``sample`` is optional
-    (a setup may have no sample), and ``shielding`` defaults to an empty list.
+    (a setup may have no sample), ``shielding`` defaults to an empty list, and
+    ``paths`` defaults to a run named ``example`` under ``data/``.
     """
 
     source: Source
@@ -23,3 +27,4 @@ class Simulation(StrictModel):
     shielding: list[Shielding] = []
     run: RunSettings
     metadata: Metadata
+    paths: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
