@@ -5,8 +5,9 @@
 
 void EventAction::EndOfEventAction(const G4Event* event)
 {
-  G4int id = event->GetEventID();
-  if (id > 0 && id % 1000 == 0) {
-    G4cout << "  ... processed " << id << " events" << G4endl;
+  const G4int id = event->GetEventID();
+  const G4int processed = id + 1;
+  if (processed % 1000 == 0) {
+    G4cout << "  ... processed " << processed << " events" << G4endl;
   }
 }
