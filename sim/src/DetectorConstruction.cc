@@ -54,7 +54,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     sampleSolid = new G4Box("sample", half, half, half);
   } else if (config.sample_shape == "sphere") {
     sampleSolid = new G4Orb("sample", config.sample_size * mm);
-  } else {  // cylinder (default)
+  } else if (config.sample_shape == "cylinder") {
+    sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
+                             0.5 * config.sample_height * mm, 0., twopi);
+  } else {
+    G4cerr << "DetectorConstruction: unknown sample shape '" << config.sample_shape
+           << "'; expected cube|sphere|cylinder. Using cylinder." << G4endl;
     sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
                              0.5 * config.sample_height * mm, 0., twopi);
   }
