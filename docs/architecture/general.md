@@ -17,16 +17,19 @@ GRAACE-SIM has two layers that talk to each other through a text command file (a
 GEANT4 macro) and a data file. There are no Python-to-C++ bindings; the coupling
 is deliberately simple.
 
-```
-  Python control layer                    GEANT4 engine (compiled C++)
-  ────────────────────                    ────────────────────────────
-  Pydantic config  ──writes──▶  GEANT4 macro  ──read by──▶  graace-sim executable
-       │                        (text commands)                    │
-       │                                                           runs simulation
-       │                                                            │
-       ◀──────────────  HDF5 output file (data + embedded config)  ─┘
-       │
-  Pydantic reads and validates the output
+```mermaid
+flowchart LR
+    subgraph py [Python control layer]
+        config[Pydantic config]
+        validate[Read and validate output]
+    end
+    subgraph cpp [GEANT4 engine, compiled C++]
+        exe[graace-sim executable]
+    end
+    config -->|writes| macro[GEANT4 macro<br/>text commands]
+    macro -->|read by| exe
+    exe -->|writes| out[Parquet output<br/>+ run config]
+    out --> validate
 ```
 
 The **GEANT4 engine** (`sim/`) is a standard GEANT4 application that does the
@@ -117,7 +120,7 @@ result. Users can always provide their own definitions inline.
 4. **Run the engine.** The runner launches `graace-sim <macro>` as a subprocess
    and streams its output to a log file.
 5. **Engine produces output.** GEANT4 records gamma detector hits and writes them
-   to an HDF5 file, with the run configuration embedded in the file.
+   to Parquet files, alongside the run configuration.
 6. **Validate the output.** Back in Python, the runner confirms the expected
    output exists and Pydantic validates its contents and the embedded
    configuration, so a run either yields a checked, self-describing result or a
@@ -125,10 +128,11 @@ result. Users can always provide their own definitions inline.
 
 ## Output format and the run record
 
-Output is written as **HDF5**, with the full validated configuration embedded in
-the file. This is the concrete form of the run record: every output file carries
-the exact settings that produced it, which makes runs reproducible and directly
-comparable to one another and to experimental measurements. The primary recorded
+Output is written as **Parquet** files, stored with the full validated
+configuration that produced them. This is the concrete form of the run record:
+every run carries the exact settings that produced it, which makes runs
+reproducible and directly comparable to one another and to experimental
+measurements. The primary recorded
 quantity is the gamma-emission data — the energies and counts seen by each
 detector — from which spectra, sensitivity estimates, and minimum-flux estimates
 are built.
