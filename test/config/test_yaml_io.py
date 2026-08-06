@@ -16,7 +16,7 @@ def test_example_loads_into_simulation():
     simulation = load_simulation(EXAMPLE)
     assert isinstance(simulation, Simulation)
     assert simulation.source.energy.mono_mev == 14.1
-    assert simulation.metadata.run_directory == Path("data/example_000")
+    assert simulation.paths.run_directory == Path("data/example_000")
 
 
 def test_broken_copy_raises(tmp_path):
