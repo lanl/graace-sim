@@ -18,11 +18,19 @@ pandas = "*"
 matplotlib = "*"
 python = "*"
 
-[tasks.build]
+[tasks.build-sim]
 description = "Configure and compile the GEANT4 engine into build/"
 cmd = "cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build"
 
-[tasks.sim]
+[tasks.clean-sim]
+description = "Remove the build directory"
+cmd = "rm -rf build"
+
+[tasks.rebuild-sim]
+description = "Clean and compile the GEANT4 engine from scratch"
+depends-on = ["clean-sim", "build-sim"]
+
+[tasks.run-sim]
 description = "Run the graace-sim engine (pass a macro as an argument)"
 cmd = "build/graace-sim"
-depends-on = ["build"]
+depends-on = ["build-sim"]
