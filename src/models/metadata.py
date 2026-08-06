@@ -1,6 +1,8 @@
-"""Bookkeeping and the run's identity, including where output goes."""
+"""Bookkeeping for a run: who made it, when, and what it is.
 
-from pathlib import Path
+Where the run's files live is a separate concern, handled by ``WorkingEnvironment`` in
+``environment.py``.
+"""
 
 from pydantic import Field
 
@@ -8,16 +10,8 @@ from models.base import StrictModel
 
 
 class Metadata(StrictModel):
-    """Author, date, description, run identity, and the output location."""
+    """Author, date, and description of a run."""
 
     author: str = Field(min_length=1)
     date: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    run_id: str = Field(default="example", min_length=1)
-    sub_run: int = Field(default=0, ge=0, le=9999)
-    output_directory: str = Field(default="data", min_length=1)
-
-    @property
-    def run_directory(self) -> Path:
-        """The run's output directory: ``<output_directory>/<run_id>_<NNN>``."""
-        return Path(self.output_directory) / f"{self.run_id}_{self.sub_run:03d}"
