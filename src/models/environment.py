@@ -26,7 +26,7 @@ class WorkingEnvironment(StrictModel):
     """
 
     working_directory: Path = Field(default=Path("data"))
-    run_id: str = Field(default="example", min_length=1)
+    run_id: str = Field(default="example", min_length=1, pattern=r"^(?!\.{1,2}$)[^/\\]+$")
     sub_run: int = Field(default=0, ge=0, le=9999)
 
     @property
