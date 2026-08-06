@@ -4,8 +4,7 @@
 #include "G4UIdirectory.hh"
 #include "G4UIcommand.hh"
 #include "G4UIparameter.hh"
-#include "G4Tokenizer.hh"
-
+#include "G4ios.hh"
 #include <sstream>
 #include <vector>
 
