@@ -22,17 +22,17 @@ class StrictModel(BaseModel):
 
     model_config = ConfigDict(
         extra="forbid",            # reject unknown fields
-        populate_by_name=True,     # accept the field name or its alias on input
         validate_assignment=True,  # re-validate when a field is changed
     )
 ```
 
 - `extra="forbid"` — a typo in a config key is an error, not a silently ignored
   field.
-- `populate_by_name=True` — input may use either the Python field name or its
-  alias (see [Naming](#naming-snake_case-fields-yaml-friendly-aliases)).
 - `validate_assignment=True` — changing a field after construction re-runs
   validation, so a model can never be edited into an invalid state.
+
+Every field is `snake_case`, in both the config and the output — see
+[Naming](#naming-always-snake_case).
 
 ## Small reusable vectors
 
@@ -285,26 +285,18 @@ class Metadata(StrictModel):
 
 ## Conventions
 
-These are the patterns to follow when adding or changing models, taken from the
-same conventions ScintiPix uses.
+These are the patterns to follow when adding or changing models.
 
-### Naming: snake_case fields, YAML-friendly aliases
+### Naming: always snake_case
 
-Model fields are `snake_case`. YAML configs written by hand are often more
-natural in `camelCase`, so a field that users commonly write in camelCase
-accepts both spellings and always serializes back to snake_case:
+Every field is `snake_case`, and that is the only spelling. Configs are written
+in `snake_case` and serialized back in `snake_case`. There are no aliases and no
+`camelCase` — one name per field, everywhere, so a key looks the same in the
+model, the config file, and the output.
 
-```python
-mask_radius_mm: float = Field(
-    default=0.0,
-    validation_alias=AliasChoices("mask_radius_mm", "maskRadius"),
-    serialization_alias="mask_radius_mm",
-    ge=0,
-)
-```
-
-Keep this to fields where it genuinely helps. A plain `snake_case` field needs no
-alias at all.
+> **NO ALIASING.** Do not add Pydantic aliases (`alias`, `validation_alias`,
+> `serialization_alias`, `AliasChoices`) to any field. One `snake_case` name per
+> field, no exceptions.
 
 ### Units in the name
 
