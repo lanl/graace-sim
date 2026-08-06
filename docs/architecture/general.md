@@ -5,11 +5,10 @@ the GRAACE-SIM framework, including its core components, data flow, and
 interaction with GEANT4 for simulating Prompt Gamma Activation Analysis 
 (PGAA) experiments.
 
-The design follows the same proven pattern as the ScintiPix simulation: a
-compiled GEANT4 engine driven by a Python control layer, with every input and
-output validated by Pydantic models. A user sets up a neutron source, a sample,
-shielding, and detectors, runs a simulation, and gets back gamma-emission
-data — all without editing or recompiling the GEANT4 code.
+The design is a compiled GEANT4 engine driven by a Python control layer, with
+every input and output validated by Pydantic models. A user sets up a neutron
+source, a sample, shielding, and detectors, runs a simulation, and gets back
+gamma-emission data — all without editing or recompiling the GEANT4 code.
 
 ## The two layers
 
