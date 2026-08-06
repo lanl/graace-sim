@@ -54,6 +54,8 @@ graace-sim/
 │   ├── apps/               main() entry point
 │   ├── src/                geometry builder, source, actions, detector, output writer, command interface
 │   ├── include/            C++ headers
+│   ├── macros/             GEANT4 macros (text commands)
+│   ├── tests/              GEANT4 engine tests
 │   └── CMakeLists.txt      build definition
 ├── src/                    Python control layer
 │   ├── models/             Pydantic configuration schema (the run record)
