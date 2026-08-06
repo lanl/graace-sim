@@ -1,0 +1,31 @@
+# Example run: a 14.1 MeV DT neutron source irradiates an iron sample and a
+# single HPGe detector records the resulting gamma hits.
+#
+# Geometry and materials must be configured before /run/initialize; the source
+# and the run come after.
+
+# --- Source: 14.1 MeV (DT generator) neutrons ---
+/source/particle neutron
+/source/energy 14.1
+/source/position 0 0 -50
+
+# --- Sample: an iron cylinder (radius 10 mm, height 20 mm) ---
+/sample/composition Fe 1.0
+/sample/density 7.87
+/sample/shape cylinder
+/sample/size 10
+/sample/height 20
+/sample/position 0 0 0
+
+# --- Detector: an HPGe crystal beside the sample ---
+/detector/radius 30
+/detector/height 50
+/detector/position 0 80 0
+
+# --- Output ---
+/output/file data/hits.parquet
+
+# --- Build the geometry and fire neutrons ---
+/run/initialize
+/run/printProgress 1000
+/run/beamOn 10000

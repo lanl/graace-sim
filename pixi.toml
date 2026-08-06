@@ -1,0 +1,36 @@
+[project]
+name = "graace-sim"
+version = "0.1.0"
+description = "GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+geant4 = "*"
+libarrow = "*"
+libparquet = "*"
+libarrow-dataset = "*"
+cmake = "*"
+ninja = "*"
+cxx-compiler = "*"
+pyarrow = "*"
+pandas = "*"
+matplotlib = "*"
+python = "*"
+
+[tasks.build-sim]
+description = "Configure and compile the GEANT4 engine into build/"
+cmd = "cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build"
+
+[tasks.clean-sim]
+description = "Remove the build directory"
+cmd = "rm -rf build"
+
+[tasks.rebuild-sim]
+description = "Clean and compile the GEANT4 engine from scratch"
+depends-on = ["clean-sim", "build-sim"]
+
+[tasks.run-sim]
+description = "Run the graace-sim engine (pass a macro as an argument)"
+cmd = "build/graace-sim"
+depends-on = ["build-sim"]
