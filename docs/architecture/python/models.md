@@ -1,0 +1,342 @@
+# Pydantic Models
+
+The Pydantic models are the configuration schema for GRAACE-SIM. They describe
+one experiment — the neutron source, the sample, the detectors, the shielding,
+and the run settings — and validate it before anything runs. The validated
+top-level model is also the run record: it is written out with the results so a
+run always carries the exact settings that produced it.
+
+All models live in `src/models/`.
+
+## The strict base
+
+Every model inherits from one base class, `StrictModel`, which sets the
+validation rules for the whole schema:
+
+```python
+from pydantic import BaseModel, ConfigDict
+
+
+class StrictModel(BaseModel):
+    """Base model with strict validation defaults."""
+
+    model_config = ConfigDict(
+        extra="forbid",            # reject unknown fields
+        populate_by_name=True,     # accept the field name or its alias on input
+        validate_assignment=True,  # re-validate when a field is changed
+    )
+```
+
+- `extra="forbid"` — a typo in a config key is an error, not a silently ignored
+  field.
+- `populate_by_name=True` — input may use either the Python field name or its
+  alias (see [Naming](#naming-snake_case-fields-yaml-friendly-aliases)).
+- `validate_assignment=True` — changing a field after construction re-runs
+  validation, so a model can never be edited into an invalid state.
+
+## Small reusable vectors
+
+Positions and sizes are their own small models, reused everywhere by
+composition. Sizes must be positive; positions may be negative.
+
+```python
+class Vec3Mm(StrictModel):
+    """A 3D position in millimeters. Any sign allowed."""
+    x_mm: float
+    y_mm: float
+    z_mm: float
+
+
+class Size3Mm(StrictModel):
+    """A 3D size in millimeters. Every side must be positive."""
+    x_mm: float = Field(gt=0)
+    y_mm: float = Field(gt=0)
+    z_mm: float = Field(gt=0)
+```
+
+## The top-level model
+
+`Simulation` is a flat composition of the parts of an experiment. Required parts
+have no default; optional parts are `X | None = None`.
+
+```python
+class Simulation(StrictModel):
+    """Top-level GRAACE-SIM configuration and run record."""
+
+    source: Source
+    sample: Sample
+    detectors: list[Detector]
+    shielding: list[Shielding] = []
+    run: RunSettings
+    metadata: Metadata
+```
+
+Each part is defined in its own file under `src/models/` and imported here.
+
+## The parts
+
+### Source (`source.py`)
+
+The neutron source, described through GEANT4's General Particle Source. `Source`
+is a composition of four independent parts, so each can be varied without
+touching the others:
+
+```python
+class Source(StrictModel):
+    particle: str = Field(default="neutron", min_length=1)
+    position: SourcePosition
+    energy: SourceEnergy
+    timing: SourceTiming = Field(default_factory=SourceTiming)
+```
+
+- **`position`** — where and how the neutrons start (a point, a disk, a beam).
+- **`energy`** — a single energy, or a full spectrum from an external file.
+- **`timing`** — continuous, a single pulse, or periodic pulses.
+
+The design goal is flexibility: a simple DT generator is a one-energy continuous
+source; a beamline concept is a spectrum-from-file pulsed source. Both are the
+same `Source` model with different parts filled in.
+
+#### Position
+
+Where the neutrons originate and the emission shape, following the General
+Particle Source geometry. A `radius_mm` is required only for shapes that need one
+(a disk or sphere), so it is optional at the schema level and enforced by an
+after-validator.
+
+```python
+class SourcePosition(StrictModel):
+    shape: Literal["point", "disk", "beam"] = "point"
+    center_mm: Vec3Mm
+    radius_mm: float | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def check_radius(self) -> "SourcePosition":
+        if self.shape in {"disk", "beam"} and self.radius_mm is None:
+            raise ValueError("`source.position.radius_mm` is required for shape 'disk' or 'beam'.")
+        return self
+```
+
+#### Energy
+
+The neutron energy, either a single value or a full spectrum read from an
+external list file. This is the "which fields are required depends on a mode"
+pattern: the value-bearing fields are optional, and an after-validator enforces
+the one the chosen `type` needs.
+
+- **`mono`** — a single energy in MeV (a DT generator at 14.1 MeV, a DD generator
+  at 2.45 MeV).
+- **`spectrum`** — a path to a plain text list file of `energy_mev intensity`
+  pairs (one per line), for a distributed source such as a Cf-252 spectrum or a
+  measured beam spectrum. The file is referenced here and read at run time, not
+  copied into the config.
+
+```python
+class SourceEnergy(StrictModel):
+    type: Literal["mono", "spectrum"] = "mono"
+    mono_mev: float | None = Field(default=None, gt=0)
+    spectrum_file: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def check_energy(self) -> "SourceEnergy":
+        if self.type == "mono" and self.mono_mev is None:
+            raise ValueError("`source.energy.mono_mev` is required when type is 'mono'.")
+        if self.type == "spectrum" and self.spectrum_file is None:
+            raise ValueError("`source.energy.spectrum_file` is required when type is 'spectrum'.")
+        return self
+```
+
+#### Timing
+
+The time structure of the source — nothing more. There are three modes:
+
+- **`continuous`** — the source emits steadily. No extra fields.
+- **`single`** — one pulse of a given width. Requires `pulse_width_ns`.
+- **`periodic`** — pulses of a given width, repeating every `pulse_period_ns`.
+  Requires both.
+
+Which fields are required depends on the `mode`, so they are optional at the
+schema level and an after-validator enforces the ones each mode needs.
+
+```python
+class SourceTiming(StrictModel):
+    mode: Literal["continuous", "single", "periodic"] = "continuous"
+    pulse_width_ns: float | None = Field(default=None, gt=0)
+    pulse_period_ns: float | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def check_timing(self) -> "SourceTiming":
+        if self.mode in {"single", "periodic"} and self.pulse_width_ns is None:
+            raise ValueError("`source.timing.pulse_width_ns` is required for mode 'single' or 'periodic'.")
+        if self.mode == "periodic" and self.pulse_period_ns is None:
+            raise ValueError("`source.timing.pulse_period_ns` is required for mode 'periodic'.")
+        return self
+```
+
+Two patterns recur in `Source` and are worth naming, because the rest of the
+schema reuses them:
+
+- **Single value or external file.** The energy is either an inline value or a
+  `*_file` path to an external list file. The config records the file path only;
+  the file is read at run time. This keeps large tables out of the config while
+  the config still fully describes the run.
+- **Conditional-required fields.** The fields a `mode`/`type` needs are optional
+  at the schema level and enforced by a `mode="after"` validator. See
+  [Conditional-required fields](#conditional-required-fields).
+
+### Sample (`sample.py`)
+
+The material being assayed: its composition, density, shape, dimensions, and
+position. Composition is given as element mass fractions that must sum to 1.0,
+with optional isotope breakdowns. Element symbols are checked against the
+periodic table.
+
+```python
+CHEMICAL_ELEMENT_SYMBOLS = frozenset({"H", "He", "Li", ...})  # full periodic table
+COMPOSITION_TOLERANCE = 1.0e-6
+
+
+class SampleElement(StrictModel):
+    symbol: str
+    mass_fraction: float = Field(gt=0.0, le=1.0)
+
+    @field_validator("symbol")
+    @classmethod
+    def known_element(cls, symbol: str) -> str:
+        if symbol not in CHEMICAL_ELEMENT_SYMBOLS:
+            raise ValueError(f"unknown chemical element symbol: {symbol!r}")
+        return symbol
+
+
+class SampleComposition(StrictModel):
+    density_g_cm3: float = Field(gt=0)
+    elements: list[SampleElement] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def check_fractions(self) -> "SampleComposition":
+        symbols = [e.symbol for e in self.elements]
+        if len(symbols) != len(set(symbols)):
+            raise ValueError("duplicate element symbol")
+        total = sum(e.mass_fraction for e in self.elements)
+        if not math.isclose(total, 1.0, rel_tol=0.0, abs_tol=COMPOSITION_TOLERANCE):
+            raise ValueError("element mass fractions must sum to 1.0")
+        return self
+```
+
+Fraction sums are checked with `math.isclose(total, 1.0, abs_tol=...)` against a
+module-level tolerance constant — never `==`, which would fail on rounding.
+
+### Detector (`detector.py`)
+
+One gamma detector: its type (for example HPGe), dimensions, position relative to
+the sample, and energy resolution. A `Simulation` holds a `list[Detector]`, so a
+setup can include more than one.
+
+```python
+class Detector(StrictModel):
+    type: str = Field(min_length=1)
+    position_mm: Vec3Mm
+    dimension_mm: Size3Mm
+    energy_resolution_kev: float | None = Field(default=None, gt=0)
+```
+
+### Shielding (`shielding.py`)
+
+Optional shielding blocks: material, thickness, and placement. `Simulation`
+defaults `shielding` to an empty list, so a setup with no shielding is valid.
+
+```python
+class Shielding(StrictModel):
+    material: str = Field(min_length=1)
+    thickness_mm: float = Field(gt=0)
+    position_mm: Vec3Mm
+```
+
+### RunSettings (`run.py`)
+
+How the engine runs: how many neutrons to simulate, the random seed, and physics
+options.
+
+```python
+class RunSettings(StrictModel):
+    neutrons: int = Field(gt=0)
+    seed: int = Field(default=0, ge=0)
+```
+
+### Metadata (`metadata.py`)
+
+Bookkeeping and the run's identity: author, date, description, a run identifier,
+and where output goes. The run's directory is `<run_id>_<NNN>` (for example
+`example_000`) under the output directory.
+
+```python
+class Metadata(StrictModel):
+    author: str = Field(min_length=1)
+    date: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    run_id: str = Field(default="example", min_length=1)
+    sub_run: int = Field(default=0, ge=0, le=9999)
+    output_directory: str = Field(default="data", min_length=1)
+
+    @property
+    def run_directory(self) -> Path:
+        return Path(self.output_directory) / f"{self.run_id}_{self.sub_run:03d}"
+```
+
+## Conventions
+
+These are the patterns to follow when adding or changing models, taken from the
+same conventions ScintiPix uses.
+
+### Naming: snake_case fields, YAML-friendly aliases
+
+Model fields are `snake_case`. YAML configs written by hand are often more
+natural in `camelCase`, so a field that users commonly write in camelCase
+accepts both spellings and always serializes back to snake_case:
+
+```python
+mask_radius_mm: float = Field(
+    default=0.0,
+    validation_alias=AliasChoices("mask_radius_mm", "maskRadius"),
+    serialization_alias="mask_radius_mm",
+    ge=0,
+)
+```
+
+Keep this to fields where it genuinely helps. A plain `snake_case` field needs no
+alias at all.
+
+### Units in the name
+
+Numeric fields carry their unit as a suffix — `position_mm`, `density_g_cm3`,
+`energy_resolution_kev`, `mono_mev`. The unit is then unambiguous at every use
+site and in the output.
+
+### Optional fields and defaults
+
+- A whole part that may be absent: `X | None = None` (for example
+  `energy_resolution_kev`).
+- A scalar with a sensible default: `Field(default=..., ...)`.
+- A nested model with a default: `Field(default_factory=SubModel)`.
+- Bounds go inline on the field: `gt`, `ge`, `le`, `min_length`.
+
+### Validators
+
+- `@field_validator` (classmethod) for a single-field check — for example, a
+  symbol being in the periodic table, or a string not being blank.
+- `@model_validator(mode="after")`, returning `self`, for cross-field rules —
+  for example, mass fractions summing to 1.0, or a field being required only for
+  a certain `type`. This is the default kind.
+- `@model_validator(mode="before")` (classmethod) only to normalize the shape of
+  the input before validation (for example, accepting a `[x, y, z]` list where a
+  vector model is expected).
+
+Error messages name the field with its dotted config path in backticks — for
+example, `` `source.energy.mono_mev` is required when type is 'mono'. `` — so a
+user can find the offending key in their config.
+
+### Conditional-required fields
+
+When which fields are required depends on a mode or type, declare them all as
+`X | None = None` and enforce the requirement in a `mode="after"` validator keyed
+off the mode. See `SourceEnergy` above.
