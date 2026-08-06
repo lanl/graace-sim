@@ -1,0 +1,31 @@
+# Visualization defaults, loaded when graace-sim is started interactively.
+# Configure a default setup so the sample and detector appear on screen.
+
+/source/particle neutron
+/source/energy 14.1
+/source/position 0 0 -50
+
+/sample/composition Fe 1.0
+/sample/density 7.87
+/sample/shape cylinder
+/sample/size 10
+/sample/height 20
+
+/detector/radius 30
+/detector/height 50
+/detector/position 0 80 0
+
+/run/initialize
+
+# Open an OpenGL viewer and draw the geometry.
+/vis/open OGL
+/vis/drawVolume
+/vis/viewer/set/viewpointThetaPhi 90 0
+/vis/scene/add/axes 0 0 0 50 mm
+
+# Draw neutron and gamma tracks, accumulating over events.
+/vis/scene/add/trajectories smooth
+/vis/scene/endOfEventAction accumulate
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set neutron green
+/vis/modeling/trajectories/drawByParticleID-0/set gamma red
