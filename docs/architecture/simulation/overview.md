@@ -57,10 +57,9 @@ sim/
 └── CMakeLists.txt                    the build definition
 ```
 
-The groupings (`geometry`, `source and actions`, …) are for reading only — the
-files sit directly in `sim/src/` and `sim/include/`. Each class maps to a page in
-this folder: geometry to [geometry.md](geometry.md), the actions to
-[Actions.md](Actions.md), the messenger and config to [messenger.md](messenger.md),
+Each class maps to a page in this folder: `DetectorConstruction` and
+`SensitiveDetector` to [geometry.md](geometry.md); the actions to
+[Actions.md](Actions.md); `Messenger` and `Config` to [messenger.md](messenger.md);
 and `SimIO` to [io.md](io.md).
 
 ## Startup (`main`)
