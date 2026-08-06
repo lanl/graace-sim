@@ -7,6 +7,8 @@
 #include <parquet/arrow/writer.h>
 
 #include <filesystem>
+#include <iomanip>
+#include <sstream>
 
 SimIO& SimIO::Instance()
 {
@@ -18,16 +20,32 @@ void SimIO::Open(const G4String& path)
 {
   fPath = path;
   fHits.clear();
+  fPartIndex = 0;
+  fTotalHits = 0;
 }
 
 void SimIO::Add(const GammaHit& hit)
 {
   fHits.push_back(hit);
+  // Flush to a part file once the buffer is full so memory use stays bounded.
+  if (fHits.size() >= kMaxHitsPerFile) {
+    WritePart();
+  }
 }
 
 void SimIO::Write()
 {
-  // Build the three columns from the collected hits.
+  // Write whatever is left in the buffer as the final part.
+  if (!fHits.empty()) {
+    WritePart();
+  }
+  G4cout << "SimIO: wrote " << fTotalHits << " gamma hits in " << fPartIndex
+         << " part file(s)" << G4endl;
+}
+
+void SimIO::WritePart()
+{
+  // Build the three columns from the buffered hits.
   arrow::StringBuilder   detectorBuilder;
   arrow::DoubleBuilder   energyBuilder;
   arrow::DoubleBuilder   timeBuilder;
@@ -68,21 +86,30 @@ void SimIO::Write()
   });
   auto table = arrow::Table::Make(schema, {detectorArray, energyArray, timeArray});
 
+  // Turn "dir/hits.parquet" into "dir/hits-part-0000.parquet".
+  std::filesystem::path base(fPath.c_str());
+  std::ostringstream name;
+  name << base.stem().string() << "-part-"
+       << std::setw(4) << std::setfill('0') << fPartIndex
+       << base.extension().string();
+  std::filesystem::path partPath = base.has_parent_path()
+    ? base.parent_path() / name.str()
+    : std::filesystem::path(name.str());
+
   // Make sure the output directory exists.
-  std::filesystem::path outPath(fPath.c_str());
-  if (outPath.has_parent_path()) {
+  if (partPath.has_parent_path()) {
     try {
-      std::filesystem::create_directories(outPath.parent_path());
+      std::filesystem::create_directories(partPath.parent_path());
     } catch (const std::filesystem::filesystem_error& e) {
-      G4cerr << "SimIO: could not create output directory " << outPath.parent_path()
+      G4cerr << "SimIO: could not create output directory " << partPath.parent_path()
              << ": " << e.what() << G4endl;
       return;
     }
   }
 
-  auto outfileResult = arrow::io::FileOutputStream::Open(fPath);
+  auto outfileResult = arrow::io::FileOutputStream::Open(partPath.string());
   if (!outfileResult.ok()) {
-    G4cerr << "SimIO: could not open output file " << fPath
+    G4cerr << "SimIO: could not open output file " << partPath.string()
            << ": " << outfileResult.status().ToString() << G4endl;
     return;
   }
@@ -91,11 +118,15 @@ void SimIO::Write()
   auto status = parquet::arrow::WriteTable(
     *table, arrow::default_memory_pool(), outfile, /*chunk_size=*/1024);
   if (!status.ok()) {
-    G4cerr << "SimIO: could not write Parquet file " << fPath
+    G4cerr << "SimIO: could not write Parquet file " << partPath.string()
            << ": " << status.ToString() << G4endl;
     return;
   }
 
-  G4cout << "SimIO: wrote " << fHits.size() << " gamma hits to " << fPath
-         << G4endl;
+  G4cout << "SimIO: wrote " << fHits.size() << " gamma hits to "
+         << partPath.string() << G4endl;
+
+  fTotalHits += fHits.size();
+  ++fPartIndex;
+  fHits.clear();
 }
