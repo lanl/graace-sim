@@ -36,11 +36,14 @@ detectors:
 run:
   neutrons: 10000
 
-# --- Metadata: who, when, and where output goes ---
+# --- Metadata: who, when, and what this run is ---
 metadata:
   author: GRAACE-SIM
   date: "2026-08-06"
   description: DT generator irradiating an iron sample with a single HPGe detector.
+
+# --- Paths: where this run's files live ---
+paths:
+  working_directory: data
   run_id: example
   sub_run: 0
-  output_directory: data
