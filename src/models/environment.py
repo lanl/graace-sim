@@ -18,11 +18,11 @@ from models.base import StrictModel
 
 
 class WorkingEnvironment(StrictModel):
-    """The run's working environment: Where the simulation outputs results and logs
+    """The run's working environment: where the simulation outputs results and logs.
 
     From the working directory and the run's identity, this derives the per-run
     directory, its ``logs/`` and ``results/`` sub-directories, and the path of
-    the macro that ran. The values are computed paths only; 
+    the macro that ran. The values are computed paths only.
     """
 
     working_directory: Path = Field(default=Path("data"))
