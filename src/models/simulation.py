@@ -27,4 +27,4 @@ class Simulation(StrictModel):
     shielding: list[Shielding] = []
     run: RunSettings
     metadata: Metadata
-    paths: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
+    environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
