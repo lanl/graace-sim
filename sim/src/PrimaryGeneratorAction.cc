@@ -4,6 +4,7 @@
 #include "G4GeneralParticleSource.hh"
 #include "G4ParticleTable.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4Exception.hh"
 
 PrimaryGeneratorAction::PrimaryGeneratorAction()
   : fSource(new G4GeneralParticleSource())
