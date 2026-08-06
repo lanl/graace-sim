@@ -33,9 +33,18 @@ void SimIO::Write()
   arrow::DoubleBuilder   timeBuilder;
 
   for (const auto& hit : fHits) {
-    detectorBuilder.Append(hit.detector).ok();
-    energyBuilder.Append(hit.energy).ok();
-    timeBuilder.Append(hit.time).ok();
+    if (auto st = detectorBuilder.Append(hit.detector); !st.ok()) {
+      G4cerr << "SimIO: failed to append detector value: " << st.ToString() << G4endl;
+      return;
+    }
+    if (auto st = energyBuilder.Append(hit.energy); !st.ok()) {
+      G4cerr << "SimIO: failed to append energy value: " << st.ToString() << G4endl;
+      return;
+    }
+    if (auto st = timeBuilder.Append(hit.time); !st.ok()) {
+      G4cerr << "SimIO: failed to append time value: " << st.ToString() << G4endl;
+      return;
+    }
   }
 
   std::shared_ptr<arrow::Array> detectorArray, energyArray, timeArray;
