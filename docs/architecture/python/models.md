@@ -57,14 +57,16 @@ class Size3Mm(StrictModel):
 ## The top-level model
 
 `Simulation` is a flat composition of the parts of an experiment. Required parts
-have no default; optional parts are `X | None = None`.
+have no default; optional parts are `X | None = None`. `source`, `detectors`,
+`run`, and `metadata` are required. `sample` is optional (a setup may have no
+sample), and `shielding` defaults to an empty list.
 
 ```python
 class Simulation(StrictModel):
     """Top-level GRAACE-SIM configuration and run record."""
 
     source: Source
-    sample: Sample
+    sample: Sample | None = None
     detectors: list[Detector]
     shielding: list[Shielding] = []
     run: RunSettings
