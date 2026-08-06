@@ -47,6 +47,30 @@ and validation: the Pydantic models (`src/models/`), YAML loading and macro
 writing (`src/config/`), and the subprocess runner (`src/runner/`). Predefined
 libraries of sources, materials, and detectors live in `catalogs/`.
 
+## Directory structure
+
+```
+graace-sim/
+├── sim/                    GEANT4 engine (compiled C++)
+│   ├── apps/               main() entry point
+│   ├── src/                geometry builder, source, actions, detector, output writer, command interface
+│   ├── include/            C++ headers
+│   └── CMakeLists.txt      build definition
+├── src/                    Python control layer
+│   ├── models/             Pydantic configuration schema (the run record)
+│   ├── config/             load YAML, expand catalog references, write the GEANT4 macro
+│   ├── runner/             prepare the run folder, launch graace-sim, verify output
+│   └── common/             shared helpers, including logging
+├── catalogs/               predefined libraries of sources, materials, and detectors
+├── examples/               example configurations and driver scripts
+├── data/                   Default output dir for simulation runs, one directory per run (macro, log, Parquet files)
+├── test/                   pytest suite, mirroring the src/ layout
+├── docs/                   documentation
+├── pixi.toml               environment and task definitions
+├── README.md
+└── LICENSE
+```
+
 ## Purpose
 
 GRAACE-Sim is meant to be a highly configurable and flexible simulation 
