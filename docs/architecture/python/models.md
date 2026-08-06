@@ -71,7 +71,7 @@ class Simulation(StrictModel):
     shielding: list[Shielding] = []
     run: RunSettings
     metadata: Metadata
-    paths: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
+    environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
 ```
 
 Each part is defined in its own file under `src/models/` and imported here.
