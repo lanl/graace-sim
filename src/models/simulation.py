@@ -24,7 +24,7 @@ class Simulation(StrictModel):
     source: Source
     sample: Sample | None = None
     detectors: list[Detector]
-    shielding: list[Shielding] = []
+    shielding: list[Shielding] = Field(default_factory=list)
     run: RunSettings
     metadata: Metadata
     environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
