@@ -63,13 +63,17 @@ graace-sim/
 │   └── common/             shared helpers, including logging
 ├── catalogs/               predefined libraries of sources, materials, and detectors
 ├── examples/               example configurations and driver scripts
-├── data/                   Default output dir for simulation runs, one directory per run (macro, log, Parquet files)
+├── data/                   default output, one directory per run (macro, log, Parquet files)  [gitignored]
 ├── test/                   pytest suite, mirroring the src/ layout
 ├── docs/                   documentation
+├── build/                  compiled GEANT4 engine  [gitignored]
 ├── pixi.toml               environment and task definitions
 ├── README.md
 └── LICENSE
 ```
+
+Directories marked `[gitignored]` are generated at runtime and are not tracked
+by git.
 
 ## Purpose
 
