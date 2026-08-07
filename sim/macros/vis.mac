@@ -4,6 +4,10 @@
 /source/particle neutron
 /source/energy 14.1
 /source/position 0 0 -50
+# A thin pencil beam: a narrow bundle of parallel neutrons, so the incoming
+# beam is visible on screen instead of a single overlapping line.
+/source/shape beam
+/source/radius 3
 
 /sample/composition Fe 1.0
 /sample/density 7.87
