@@ -1,7 +1,8 @@
 # Geometry
 
 The geometry builder constructs the simulated world from the configured values:
-it places the neutron source, the sample, any shielding, and the detectors. This
+it places the neutron source, the sample (optional), any shielding, and the
+detectors. This
 is where the "swap parts without recompiling" goal is realized — the builder
 reads the values the [messenger](messenger.md) stored and builds accordingly, so
 the same compiled engine produces different setups.
@@ -25,7 +26,8 @@ disk, beam). -->
 ### Sample
 
 <!-- Outline: building the sample material from composition (element mass
-fractions, optional isotopes), density, shape, dimensions, and placing it. -->
+fractions, optional isotopes), density, shape, dimensions, and placing it. The
+sample is optional: an empty composition means no sample volume is built. -->
 
 ### Shielding
 
