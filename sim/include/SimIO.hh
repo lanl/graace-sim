@@ -19,12 +19,20 @@
 // stays bounded no matter how long the run is. From an output path of
 // "results/gamma_hits.parquet" each detector's parts are written into its own
 // subdirectory named after the detector:
-// "results/<detector>/gamma_hits-part-00000.parquet", and so on; the analysis
-// side reads a detector's whole set back as one table.
+// "results/<detector>/gamma_hits-part-w000-00000.parquet", and so on; the
+// analysis side reads a detector's whole set back as one table.
+//
+// Under the multithreaded run manager each worker thread has its own SimIO (the
+// instance is thread-local), so hits are buffered and written without any locks
+// or shared state. The "w<thread>" tag in the part-file name keeps two workers
+// from ever writing the same detector's file. The analysis side reads a
+// detector's whole set of part files as one table, so the number of workers is
+// transparent to it.
 class SimIO
 {
 public:
-  // The single shared writer used by the sensitive detector and run action.
+  // The per-thread writer used by the sensitive detector and run action. Each
+  // worker thread gets its own instance, so no state is shared across threads.
   static SimIO& Instance();
 
   void Open(const G4String& path);   // start a fresh run
