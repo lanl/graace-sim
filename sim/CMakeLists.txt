@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 project(graace-sim)
 
 # --- GEANT4 with UI and visualization drivers ---
-set(GEANT4_HAVE_H5_HAVE_THREADSAFE TRUE CACHE INTERNAL "skip HDF5 thread-safety check")
+# Required by GEANT4's own bundled CMake config: it runs a capability probe that
+# aborts our configure step in multithreaded mode. Pre-seeding the probe result
+# skips that check. Do not remove — the build fails to configure without it.
+set(GEANT4_HAVE_H5_HAVE_THREADSAFE TRUE CACHE INTERNAL "pre-seed a GEANT4 config probe")
 find_package(Geant4 REQUIRED ui_all vis_all)
 include(${Geant4_USE_FILE})
 
