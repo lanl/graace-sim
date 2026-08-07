@@ -28,7 +28,8 @@ sample:
 # The engine models the crystal as a cylinder (radius 30 mm, height 50 mm); here
 # dimension_mm is its bounding box (60 x 60 x 50 mm).
 detectors:
-  - type: HPGe
+  - name: hpge
+    type: HPGe
     position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
     dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
 
