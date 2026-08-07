@@ -13,10 +13,10 @@
 /sample/position 0 0 0
 
 # --- Detector: an HPGe crystal (radius 30 mm, height 50 mm) beside the sample ---
-/detector/add 30 50 0 80 0
+/detector/add hpge 30 50 0 80 0
 
-# --- Output ---
-/output/file data/hits.parquet
+# --- Output: base path; each detector writes to results/<name>/gamma_hits-* ---
+/output/file data/results/gamma_hits.parquet
 
 # --- Build the geometry ---
 /run/initialize
