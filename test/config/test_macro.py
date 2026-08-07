@@ -28,7 +28,7 @@ def test_example_commands(tmp_path):
     assert "/sample/density 7.87" in lines
     assert "/sample/shape cylinder" in lines
     assert "/sample/height 20" in lines
-    assert "/detector/add 30 50 0 80 0" in lines
+    assert "/detector/add hpge 30 50 0 80 0" in lines
     assert "/source/particle neutron" in lines
     assert "/source/energyType mono" in lines
     assert "/source/energy 14.1" in lines
@@ -42,7 +42,7 @@ def test_command_order(tmp_path):
 
     # Geometry and output come before /run/initialize; source and run after.
     assert lines.index("/sample/shape cylinder") < initialize
-    assert lines.index("/detector/add 30 50 0 80 0") < initialize
+    assert lines.index("/detector/add hpge 30 50 0 80 0") < initialize
     assert initialize < lines.index("/source/particle neutron")
     assert initialize < lines.index("/run/beamOn 10000")
 
@@ -50,19 +50,23 @@ def test_command_order(tmp_path):
 def test_output_file_under_results(tmp_path):
     simulation = load_simulation(EXAMPLE)
     lines = _write(simulation, tmp_path)
-    expected = simulation.environment.results_directory / "hits.parquet"
+    expected = simulation.environment.results_directory / "gamma_hits.parquet"
     assert f"/output/file {expected}" in lines
 
 
 def test_multiple_detectors(tmp_path):
     simulation = load_simulation(EXAMPLE)
     second = simulation.detectors[0].model_copy(deep=True)
+    second.name = "hpge_bottom"
     second.position_mm.y_mm = -80
     simulation.detectors = [simulation.detectors[0], second]
     lines = _write(simulation, tmp_path)
 
     add_lines = [line for line in lines if line.startswith("/detector/add")]
-    assert add_lines == ["/detector/add 30 50 0 80 0", "/detector/add 30 50 0 -80 0"]
+    assert add_lines == [
+        "/detector/add hpge 30 50 0 80 0",
+        "/detector/add hpge_bottom 30 50 0 -80 0",
+    ]
 
 
 def test_shielding_block(tmp_path):
