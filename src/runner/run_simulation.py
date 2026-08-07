@@ -25,7 +25,7 @@ _PROGRESS = re.compile(r"processed\s+(\d+)\s+events")
 def _command(config: Simulation, macro_path: Path) -> list[str]:
     """Build the engine command: the resolved binary, its arguments, and the macro."""
     tokens = shlex.split(config.runner.binary)
-    if not tokens:
+    if not tokens or not tokens[0].strip():
         raise ValueError("`runner.binary` did not resolve to a command.")
     engine = shutil.which(tokens[0])
     if engine is None:
