@@ -8,7 +8,7 @@ GRAACE-SIM is a material-agnostic GEANT4 framework for modeling Prompt Gamma Act
 
 ## Getting Started
 
-In order to run the simulation you need to have the pixi environment set up. Pixi can be install via:
+In order to run the simulation you need to have the pixi environment set up. Pixi can be installed via:
 
 ```
 curl -fsSL https://pixi.sh/install.sh | sh
