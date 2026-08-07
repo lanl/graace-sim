@@ -41,8 +41,18 @@ def _sample_commands(simulation: Simulation) -> list[str]:
         for element in sample.composition.elements
     )
     position = sample.position_mm
-    commands = [
-        f"/sample/composition {composition}",
+    commands = [f"/sample/composition {composition}"]
+    # An isotope breakdown is optional per element; without one the engine uses
+    # natural abundances and no /sample/isotope line is written.
+    for element in sample.composition.elements:
+        if element.isotopes is None:
+            continue
+        for isotope in element.isotopes:
+            commands.append(
+                f"/sample/isotope {element.symbol} {isotope.mass_number} "
+                f"{_format(isotope.atom_fraction)}"
+            )
+    commands += [
         f"/sample/density {_format(sample.composition.density_g_cm3)}",
         f"/sample/shape {sample.shape}",
         f"/sample/size {_format(sample.size_mm)}",
