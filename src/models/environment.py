@@ -12,7 +12,7 @@ directories is the runner's job. The paths describe the layout:
 
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from models.base import StrictModel
 
@@ -26,8 +26,18 @@ class WorkingEnvironment(StrictModel):
     """
 
     working_directory: Path = Field(default=Path("data"))
-    run_id: str = Field(default="example", min_length=1, pattern=r"^(?!\.{1,2}$)[^/\\]+$")
+    run_id: str = Field(default="example", min_length=1)
     sub_run: int = Field(default=0, ge=0, le=9999)
+
+    @field_validator("run_id")
+    @classmethod
+    def safe_run_id(cls, run_id: str) -> str:
+        """The run id names a directory, so reject path separators and `.`/`..`."""
+        if "/" in run_id or "\\" in run_id:
+            raise ValueError("`run_id` must not contain a path separator.")
+        if run_id in {".", ".."}:
+            raise ValueError("`run_id` must not be '.' or '..'.")
+        return run_id
 
     @property
     def run_directory(self) -> Path:
