@@ -61,7 +61,8 @@ def _detector_commands(simulation: Simulation) -> list[str]:
     The engine builds each detector as a cylinder, so the model's box
     ``dimension_mm`` maps to a crystal radius and height: the radius is half the
     x side and the height is the z side (the inverse of the mapping documented
-    in ``examples/yaml_files/example.yaml``).
+    in ``examples/yaml_files/example.yaml``). The name labels the detector's
+    volume and the subdirectory its hits are written to.
     """
     commands = []
     for detector in simulation.detectors:
@@ -70,7 +71,7 @@ def _detector_commands(simulation: Simulation) -> list[str]:
         radius = _format(dimension.x_mm / 2)
         height = _format(dimension.z_mm)
         commands.append(
-            f"/detector/add {radius} {height} "
+            f"/detector/add {detector.name} {radius} {height} "
             f"{_vector(position.x_mm, position.y_mm, position.z_mm)}"
         )
     return commands
@@ -89,8 +90,13 @@ def _shielding_commands(simulation: Simulation) -> list[str]:
 
 
 def _output_commands(simulation: Simulation) -> list[str]:
-    """The ``/output/*`` command: where to write the gamma hit Parquet file."""
-    hits_file = simulation.environment.results_directory / "hits.parquet"
+    """The ``/output/*`` command: the base path for the gamma hit Parquet files.
+
+    The engine writes each detector's hits into its own subdirectory of the
+    results directory (``results/<detector_name>/gamma_hits-part-NNNNN.parquet``),
+    so this is only the base path — the detector name is added by the engine.
+    """
+    hits_file = simulation.environment.results_directory / "gamma_hits.parquet"
     return [f"/output/file {hits_file}"]
 
 
