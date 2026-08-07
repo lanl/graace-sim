@@ -1,6 +1,7 @@
 #include "SimIO.hh"
 
 #include "G4ios.hh"
+#include "G4Threading.hh"
 
 #include <arrow/api.h>
 #include <arrow/io/file.h>
@@ -12,7 +13,9 @@
 
 SimIO& SimIO::Instance()
 {
-  static SimIO instance;
+  // thread_local: each worker thread gets its own writer, so buffers and part
+  // counts are never shared and the hit path needs no locking.
+  static thread_local SimIO instance;
   return instance;
 }
 
@@ -84,11 +87,17 @@ void SimIO::WritePart(const G4String& detector, Bucket& bucket)
   auto table = arrow::Table::Make(schema, {energyArray, timeArray});
 
   // Turn "dir/gamma_hits.parquet" into
-  // "dir/<detector>/gamma_hits-part-00000.parquet": the detector name becomes a
-  // subdirectory so each detector's parts live together.
+  // "dir/<detector>/gamma_hits-part-w000-00000.parquet": the detector name
+  // becomes a subdirectory so each detector's parts live together, and the
+  // "w<thread>" tag keeps two worker threads from ever writing the same file.
+  // The master thread (id -1 under the MT run manager) writes nothing, so only
+  // worker ids appear; a serial run reports id -1 too and is tagged "w000".
+  const G4int threadId = G4Threading::G4GetThreadId();
+  const int workerTag = threadId < 0 ? 0 : threadId;
   std::filesystem::path base(fPath.c_str());
   std::ostringstream name;
   name << base.stem().string() << "-part-"
+       << 'w' << std::setw(3) << std::setfill('0') << workerTag << '-'
        << std::setw(5) << std::setfill('0') << bucket.partIndex
        << base.extension().string();
   std::filesystem::path detectorDir = base.has_parent_path()

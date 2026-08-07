@@ -72,6 +72,14 @@ and `SimIO` to [io.md](io.md).
 - if given a macro, execute it; otherwise open the interactive window
 -->
 
+The run manager is the multithreaded one: a PGAA run is many independent neutron
+histories, which GEANT4 splits across worker threads so the run finishes in a
+fraction of the wall-clock time. How many threads a run uses is set by the
+macro's `/run/numberOfThreads` command — the Python runner computes it from a
+percentage-of-cores cap (`runner.cpu_percent`, default 80), so a run never takes
+more of the machine than allowed. The worker threads score hits and write their
+own output; the master thread only opens the run and prints the summary.
+
 ## Physics list
 
 <!-- Outline: which physics list and why; high-precision neutron data;

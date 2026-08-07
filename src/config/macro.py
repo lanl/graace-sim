@@ -12,6 +12,7 @@ command directly — there is nothing to reject. Command order matches
 the source and the run after.
 """
 
+import os
 from pathlib import Path
 
 from loguru import logger
@@ -23,6 +24,18 @@ def _format(value: float) -> str:
     """Format a number with minimal digits (no trailing zeros)."""
     text = f"{value:.12f}".rstrip("0").rstrip(".")
     return text if text else "0"
+
+
+def _thread_count(cpu_percent: int) -> int:
+    """How many engine threads to run: a fraction of the machine's cores.
+
+    ``threads = max(1, floor(cores * cpu_percent / 100))`` using the machine's
+    logical cores (``os.cpu_count()``), so a run uses only the configured
+    fraction of the machine and always at least one thread. Falls back to one
+    core if the count is unknown.
+    """
+    cores = os.cpu_count() or 1
+    return max(1, cores * cpu_percent // 100)
 
 
 def _vector(x_mm: float, y_mm: float, z_mm: float) -> str:
@@ -143,13 +156,21 @@ def _source_commands(simulation: Simulation) -> list[str]:
 def _macro_commands(simulation: Simulation) -> list[str]:
     """Assemble the full command list in the order the engine expects."""
     commands: list[str] = []
+    # The thread count must be set before /run/initialize, so it leads the macro.
+    threads = _thread_count(simulation.runner.cpu_percent)
+    commands.append(f"/run/numberOfThreads {threads}")
     commands.extend(_sample_commands(simulation))
     commands.extend(_detector_commands(simulation))
     commands.extend(_shielding_commands(simulation))
     commands.extend(_output_commands(simulation))
     commands.append("/run/initialize")
+    # Seed the random number generator so a run is reproducible: the same seed
+    # gives the same output. GEANT4's built-in command takes two seeds; using the
+    # one configured value for both is enough to fix the run. Under the
+    # multithreaded run manager GEANT4 derives each worker's seeds from this, so
+    # this is the single control for the whole run.
+    commands.append(f"/random/setSeeds {simulation.run.seed} {simulation.run.seed}")
     commands.extend(_source_commands(simulation))
-    # `run.seed` has no engine command yet, so it is intentionally not written.
     commands.append(f"/run/beamOn {simulation.run.neutrons}")
     return commands
 

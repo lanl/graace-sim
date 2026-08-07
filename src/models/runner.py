@@ -15,6 +15,11 @@ class SimRunner(StrictModel):
     binary: str = Field(default="graace-sim", min_length=1)
     show_progress: bool = Field(default=True)
     verify_output: bool = Field(default=True)
+    # The fraction of the machine's CPU cores a run may use. The macro writer
+    # turns this into the engine's thread count, so a run never takes more of the
+    # machine than this allows. Defaults below 100 so a run leaves the machine
+    # responsive by default; set it to 100 to use every core.
+    cpu_percent: int = Field(default=80, ge=1, le=100)
 
     @field_validator("binary")
     @classmethod

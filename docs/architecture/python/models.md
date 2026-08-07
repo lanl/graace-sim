@@ -294,20 +294,37 @@ class RunSettings(StrictModel):
     seed: int = Field(default=0, ge=0)
 ```
 
+`seed` reaches the engine as GEANT4's built-in `/random/setSeeds` command, set
+right after `/run/initialize`. A serial run (`cpu_percent` giving one thread) is
+then fully reproducible: the same seed gives byte-identical output. A
+multithreaded run is not reproducible even at a fixed seed — GEANT4's neutron
+physics samples in a thread-order-dependent way — but runs still agree within
+counting statistics. Run serial when you need an exactly reproducible run.
+
 ### SimRunner (`runner.py`)
 
 How to *launch* the engine, kept separate from `RunSettings` (`run`), which is
 the *physics* of the run. `SimRunner` carries the binary name and the launch
-options the runner acts on: whether to draw a progress bar, and whether to
-verify each detector produced results. The binary defaults to `graace-sim` and
-is resolved on PATH, so a config never records where the build lives.
+options the runner acts on: whether to draw a progress bar, whether to verify
+each detector produced results, and how much of the machine's CPU a run may use.
+The binary defaults to `graace-sim` and is resolved on PATH, so a config never
+records where the build lives.
 
 ```python
 class SimRunner(StrictModel):
     binary: str = Field(default="graace-sim", min_length=1)
     show_progress: bool = Field(default=True)
     verify_output: bool = Field(default=True)
+    cpu_percent: int = Field(default=80, ge=1, le=100)
 ```
+
+`cpu_percent` caps how much of the machine one run takes. The engine runs
+multithreaded, and the macro writer turns this percentage into the engine's
+thread count — `max(1, floor(cores * cpu_percent / 100))` over the machine's
+logical cores — emitted as `/run/numberOfThreads` before `/run/initialize`. The
+default of 80 leaves the machine responsive; set it to 100 to use every core.
+That single setting is the whole control: there is no separate override, and the
+engine never exceeds it.
 
 `run:` (physics) and `runner:` (launch) read closely; keeping them apart means a
 config can change the neutron count without touching how the engine is invoked,
