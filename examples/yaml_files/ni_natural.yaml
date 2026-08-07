@@ -3,13 +3,18 @@
 # A thermal (0.025 eV) neutron beam captures on the nickel, and the product
 # nuclei emit prompt gamma rays whose energies are the fingerprint of each
 # isotope. Natural Ni is 68% Ni-58, so its capture spectrum is dominated by
-# Ni-58(n,gamma)Ni-59 -- a strong 464.98 keV line and a very high-energy
-# 8999 keV capture gamma.
+# Ni-58(n,gamma)Ni-59: a prominent lower-energy line near 465 keV plus a
+# high-energy tail that reaches past 7 MeV (the Ni-58 capture Q-value is
+# ~8999 keV, so the cascade extends up toward ~9 MeV).
 #
 # Compare against ni58_enriched.yaml (pure Ni-58, same fingerprint but cleaner)
 # and ni62_enriched.yaml (pure Ni-62, which has the largest capture cross-section
-# of the nickel isotopes and emits at a DIFFERENT energy, 6837.7 keV). Overlay
-# the three detector spectra to see the lines move with isotopic composition.
+# of the nickel isotopes but a lower Q-value ~6838 keV, so its spectrum cuts off
+# near 6.8 MeV). Overlay the three detector spectra to see the high-energy
+# endpoint move with isotopic composition.
+#
+# Note: multi-MeV capture gammas mostly Compton-escape the 60 mm Ge crystal, so
+# the high-energy region reads as a tail rather than sharp full-energy peaks.
 #
 # This element carries NO `isotopes` block, so the engine uses natural
 # abundances -- the everyday case.
