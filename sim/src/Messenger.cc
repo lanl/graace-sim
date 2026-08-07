@@ -143,7 +143,14 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     std::istringstream in(value);
     ShieldingBlock block;
     double x = 0, y = 0, z = 0;
-    in >> block.material >> block.thickness >> x >> y >> z;
+    if (!(in >> block.material >> block.thickness >> x >> y >> z)) {
+      G4cerr << "Messenger: invalid /shielding/add args; expected: material thickness_mm x y z" << G4endl;
+      return;
+    }
+    if (block.thickness <= 0.) {
+      G4cerr << "Messenger: shielding thickness must be > 0 mm; got " << block.thickness << G4endl;
+      return;
+    }
     block.position = {x, y, z};
     config.shielding.push_back(block);
 
