@@ -1,0 +1,71 @@
+# PGAA example (3 of 3): nickel enriched to pure Ni-62.
+#
+# Ni-62 has the largest thermal-capture cross-section of the nickel isotopes
+# (~14.5 barn, vs ~4.5 barn for Ni-58), so it captures the MOST neutrons. But its
+# neutron-capture Q-value is lower, ~6838 keV (Ni-62(n,gamma)Ni-63), so its
+# prompt-gamma cascade tops out near 6.8 MeV and the recorded spectrum cuts off
+# there -- essentially no counts above ~6.9 MeV.
+#
+# That endpoint is the discriminator: Ni-58's spectrum has a high-energy tail
+# reaching past 7 MeV toward ~9 MeV, while Ni-62's ends near 6.8 MeV. Compare the
+# region above ~6.9 MeV -- Ni-58 still has counts there, Ni-62 has essentially
+# none -- to tell the two apart, even though Ni-62 is the stronger absorber.
+#
+# This is the point of the three-config set: with the same source, geometry, and
+# detectors, only the isotopic composition changes, and the gamma spectrum
+# changes with it. Overlay ni_natural / ni58_enriched / ni62_enriched to see it.
+#
+# Note: multi-MeV capture gammas mostly Compton-escape the 60 mm Ge crystal, so
+# the high-energy region reads as a tail rather than sharp full-energy peaks; the
+# isotope difference is in where that tail ends.
+
+# --- Source: a thermal neutron beam (0.025 eV), a point 50 mm before the sample ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -50}
+  energy:
+    type: mono
+    mono_mev: 0.000000025   # 0.025 eV, a thermal neutron
+
+# --- Sample: a nickel cylinder, all Ni-62 by atom fraction ---
+sample:
+  composition:
+    density_g_cm3: 8.908
+    elements:
+      - symbol: Ni
+        mass_fraction: 1.0
+        isotopes:
+          - {mass_number: 62, atom_fraction: 1.0}
+  shape: cylinder
+  size_mm: 10      # cylinder radius
+  height_mm: 20    # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Detectors: two opposed HPGe crystals, one above and one below the sample ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: fire enough neutrons to build a spectrum (raise for cleaner peaks) ---
+run:
+  neutrons: 100000
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-08-06"
+  description: PGAA thermal-capture spectrum of pure Ni-62.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: ni62_enriched
+  sub_run: 0
