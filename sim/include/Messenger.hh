@@ -24,12 +24,20 @@ private:
   std::unique_ptr<G4UIdirectory> fSourceDir;
   std::unique_ptr<G4UIdirectory> fSampleDir;
   std::unique_ptr<G4UIdirectory> fDetectorDir;
+  std::unique_ptr<G4UIdirectory> fShieldingDir;
   std::unique_ptr<G4UIdirectory> fOutputDir;
 
   // --- /source/* ---
   std::unique_ptr<G4UIcommand> fSourceParticle;
   std::unique_ptr<G4UIcommand> fSourceEnergy;
   std::unique_ptr<G4UIcommand> fSourcePosition;
+  std::unique_ptr<G4UIcommand> fSourceShape;
+  std::unique_ptr<G4UIcommand> fSourceRadius;
+  std::unique_ptr<G4UIcommand> fSourceEnergyType;
+  std::unique_ptr<G4UIcommand> fSourceSpectrumFile;
+  std::unique_ptr<G4UIcommand> fSourceTiming;
+  std::unique_ptr<G4UIcommand> fSourcePulseWidth;
+  std::unique_ptr<G4UIcommand> fSourcePulsePeriod;
 
   // --- /sample/* ---
   std::unique_ptr<G4UIcommand> fSampleComposition;
@@ -40,12 +48,16 @@ private:
   std::unique_ptr<G4UIcommand> fSamplePosition;
 
   // --- /detector/* ---
-  std::unique_ptr<G4UIcommand> fDetectorRadius;
-  std::unique_ptr<G4UIcommand> fDetectorHeight;
-  std::unique_ptr<G4UIcommand> fDetectorPosition;
+  std::unique_ptr<G4UIcommand> fDetectorAdd;
+
+  // --- /shielding/* ---
+  std::unique_ptr<G4UIcommand> fShieldingAdd;
 
   // --- /output/* ---
   std::unique_ptr<G4UIcommand> fOutputFile;
+
+  // The default detector set is replaced by the first /detector/add.
+  bool fDetectorsCleared = false;
 };
 
 #endif
