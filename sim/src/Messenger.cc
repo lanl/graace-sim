@@ -119,9 +119,17 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
       composition.emplace_back(symbol, fraction);
     }
     config.sample_composition = composition;
+    // A new composition owns its isotope breakdown, so drop any isotopes carried
+    // over from an earlier composition in the same process (interactive session
+    // or a re-run macro). Otherwise an element could not revert to natural
+    // abundances by simply omitting its /sample/isotope lines. Any /sample/isotope
+    // lines meant for this composition must therefore follow it.
+    config.sample_isotopes.clear();
   } else if (command == fSampleIsotope.get()) {
     // symbol mass_number atom_fraction. Appended one line per isotope, keyed by
-    // element symbol; a symbol with no line uses natural abundances.
+    // element symbol; a symbol with no line uses natural abundances. Isotope
+    // lines must come after their /sample/composition line, which clears any
+    // previously set isotopes.
     std::istringstream in(value);
     G4String symbol;
     int mass_number = 0;
