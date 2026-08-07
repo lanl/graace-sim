@@ -14,9 +14,11 @@ struct GammaHit
 };
 
 // One gamma detector: an HPGe (germanium) cylinder of the given radius and
-// height at the given position. A run may hold more than one.
+// height at the given position. Its name labels the detector volume and the
+// output subdirectory its hits are written to. A run may hold more than one.
 struct DetectorBlock
 {
+  G4String      name;      // detector name (volume and output subdirectory)
   double        radius;    // mm (crystal radius)
   double        height;    // mm (crystal length)
   G4ThreeVector position;  // mm
