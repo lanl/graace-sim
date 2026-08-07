@@ -1,6 +1,6 @@
 # Example configuration: a 14.1 MeV DT neutron source irradiates an iron sample
 # with two HPGe detectors on opposite sides, each recording gamma hits under its
-# own name (detector_0 and detector_1 in the output).
+# own name (hpge_top and hpge_bottom in the output).
 
 # --- Source: 14.1 MeV (DT generator) neutrons, starting 50 mm before the sample ---
 source:
