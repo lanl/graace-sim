@@ -39,6 +39,11 @@ Vectors are `x y z` in mm. The current commands:
 several. The first `/detector/add` replaces the built-in default detector. A
 detector's name labels both its volume and its output subdirectory.
 
+The sample itself is optional. A macro with no `/sample/composition` command
+leaves the composition empty, and the geometry builder then places no sample
+volume — the world holds only the source, detectors, and any shielding. The
+Python macro writer omits every `/sample/*` command when a config has no sample.
+
 `/sample/isotope` also appends one line per isotope, keyed by element symbol. It
 is optional: an element with no `/sample/isotope` line uses natural isotopic
 abundances. When lines are present for an element, that element is built from the
