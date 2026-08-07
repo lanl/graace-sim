@@ -52,7 +52,7 @@ public:
   // --- Detectors (/detector/*) ---
   // One HPGe cylinder per entry. Defaults to the single example detector; each
   // /detector/add command replaces this default set with the added detectors.
-  std::vector<DetectorBlock> detectors{{30., 50., {0., 80., 0.}}};
+  std::vector<DetectorBlock> detectors{{"detector", 30., 50., {0., 80., 0.}}};
 
   // --- Shielding (/shielding/*) ---
   // Zero or more shielding slabs; empty by default.
