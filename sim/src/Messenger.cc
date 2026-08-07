@@ -50,6 +50,11 @@ Messenger::Messenger()
   fSampleComposition = MakeCommand(
     "/sample/composition",
     "Element mass fractions: Sym frac Sym frac ... (e.g. Fe 0.7 Cr 0.3)", this);
+  fSampleIsotope = MakeCommand(
+    "/sample/isotope",
+    "Isotope breakdown for an element: symbol mass_number atom_fraction "
+    "(e.g. U 235 0.9). One line per isotope; atom fractions per element sum to 1.",
+    this);
   fSampleDensity  = MakeCommand("/sample/density", "Sample density in g/cm3", this);
   fSampleShape    = MakeCommand("/sample/shape", "Sample shape: cube | sphere | cylinder", this);
   fSampleSize     = MakeCommand("/sample/size", "Cube side, or sphere/cylinder radius (mm)", this);
@@ -114,6 +119,42 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
       composition.emplace_back(symbol, fraction);
     }
     config.sample_composition = composition;
+    // A new composition owns its isotope breakdown, so drop any isotopes carried
+    // over from an earlier composition in the same process (interactive session
+    // or a re-run macro). Otherwise an element could not revert to natural
+    // abundances by simply omitting its /sample/isotope lines. Any /sample/isotope
+    // lines meant for this composition must therefore follow it.
+    config.sample_isotopes.clear();
+  } else if (command == fSampleIsotope.get()) {
+    // symbol mass_number atom_fraction. Appended one line per isotope, keyed by
+    // element symbol; a symbol with no line uses natural abundances. Isotope
+    // lines must come after their /sample/composition line, which clears any
+    // previously set isotopes.
+    std::istringstream in(value);
+    G4String symbol;
+    int mass_number = 0;
+    double atom_fraction = 0.;
+    if (!(in >> symbol >> mass_number >> atom_fraction)) {
+      G4cerr << "Messenger: invalid /sample/isotope args; expected: "
+                "symbol mass_number atom_fraction" << G4endl;
+      return;
+    }
+    if (mass_number <= 0 || atom_fraction <= 0. || atom_fraction > 1.) {
+      G4cerr << "Messenger: invalid /sample/isotope values; expected mass_number > 0 and 0 < atom_fraction <= 1; got mass_number="
+             << mass_number << ", atom_fraction=" << atom_fraction << G4endl;
+      return;
+    }
+    auto it = config.sample_isotopes.find(symbol);
+    if (it != config.sample_isotopes.end()) {
+      for (const auto& existing : it->second) {
+        if (existing.mass_number == mass_number) {
+          G4cerr << "Messenger: duplicate isotope mass number " << mass_number
+                 << " for element '" << symbol << "'" << G4endl;
+          return;
+        }
+      }
+    }
+    config.sample_isotopes[symbol].push_back({mass_number, atom_fraction});
   } else if (command == fSampleDensity.get()) {
     config.sample_density = std::stod(value);
   } else if (command == fSampleShape.get()) {

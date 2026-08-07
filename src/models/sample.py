@@ -28,11 +28,24 @@ CHEMICAL_ELEMENT_SYMBOLS = frozenset({
 COMPOSITION_TOLERANCE = 1.0e-6
 
 
+class SampleIsotope(StrictModel):
+    """One isotope of an element, as an atom fraction of that element."""
+
+    mass_number: int = Field(gt=0)
+    atom_fraction: float = Field(gt=0.0, le=1.0)
+
+
 class SampleElement(StrictModel):
-    """One element in the sample, as a mass fraction of the whole."""
+    """One element in the sample, as a mass fraction of the whole.
+
+    ``isotopes`` is an optional atom-fraction breakdown for this element. ``None``
+    (the default) uses natural isotopic abundances. When given, the atom fractions
+    must sum to 1.0 and mass numbers must be unique.
+    """
 
     symbol: str
     mass_fraction: float = Field(gt=0.0, le=1.0)
+    isotopes: list[SampleIsotope] | None = Field(default=None, min_length=1)
 
     @field_validator("symbol")
     @classmethod
@@ -40,6 +53,20 @@ class SampleElement(StrictModel):
         if symbol not in CHEMICAL_ELEMENT_SYMBOLS:
             raise ValueError(f"unknown chemical element symbol: {symbol!r}")
         return symbol
+
+    @model_validator(mode="after")
+    def check_isotopes(self) -> "SampleElement":
+        if self.isotopes is None:
+            return self
+        mass_numbers = [isotope.mass_number for isotope in self.isotopes]
+        if len(mass_numbers) != len(set(mass_numbers)):
+            raise ValueError(f"duplicate isotope mass number in element {self.symbol!r}")
+        total = sum(isotope.atom_fraction for isotope in self.isotopes)
+        if not math.isclose(total, 1.0, rel_tol=0.0, abs_tol=COMPOSITION_TOLERANCE):
+            raise ValueError(
+                f"isotope atom fractions for element {self.symbol!r} must sum to 1.0"
+            )
+        return self
 
 
 class SampleComposition(StrictModel):

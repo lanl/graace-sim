@@ -33,4 +33,13 @@ struct ShieldingBlock
   G4ThreeVector position;   // mm
 };
 
+// One isotope of an element, as an atom fraction of that element. Used only when
+// a sample element carries an explicit isotope breakdown; otherwise the element
+// is built from natural abundances.
+struct SampleIsotope
+{
+  G4int    mass_number;    // e.g. 235
+  G4double atom_fraction;  // fraction by number of atoms; isotopes sum to 1
+};
+
 #endif

@@ -190,18 +190,30 @@ schema reuses them:
 ### Sample (`sample.py`)
 
 The material being assayed: its composition, density, shape, dimensions, and
-position. Composition is given as element mass fractions that must sum to 1.0,
-with optional isotope breakdowns. Element symbols are checked against the
-periodic table.
+position. Composition is given as element mass fractions that must sum to 1.0.
+Element symbols are checked against the periodic table.
+
+Each element may optionally carry an isotope breakdown. Without one, the engine
+uses the element's natural isotopic abundances (the common case). With one, the
+element is built from the listed isotopes, each given as an **atom fraction**
+(fraction by number of atoms — what Geant4 and natural abundances use). The atom
+fractions must sum to 1.0 and mass numbers must be unique. This is opt-in: an
+element with no `isotopes` key behaves exactly as before.
 
 ```python
 CHEMICAL_ELEMENT_SYMBOLS = frozenset({"H", "He", "Li", ...})  # full periodic table
 COMPOSITION_TOLERANCE = 1.0e-6
 
 
+class SampleIsotope(StrictModel):
+    mass_number: int = Field(gt=0)
+    atom_fraction: float = Field(gt=0.0, le=1.0)
+
+
 class SampleElement(StrictModel):
     symbol: str
     mass_fraction: float = Field(gt=0.0, le=1.0)
+    isotopes: list[SampleIsotope] | None = Field(default=None, min_length=1)
 
     @field_validator("symbol")
     @classmethod
@@ -209,6 +221,20 @@ class SampleElement(StrictModel):
         if symbol not in CHEMICAL_ELEMENT_SYMBOLS:
             raise ValueError(f"unknown chemical element symbol: {symbol!r}")
         return symbol
+
+    @model_validator(mode="after")
+    def check_isotopes(self) -> "SampleElement":
+        if self.isotopes is None:
+            return self
+        mass_numbers = [isotope.mass_number for isotope in self.isotopes]
+        if len(mass_numbers) != len(set(mass_numbers)):
+            raise ValueError(f"duplicate isotope mass number in element {self.symbol!r}")
+        total = sum(isotope.atom_fraction for isotope in self.isotopes)
+        if not math.isclose(total, 1.0, rel_tol=0.0, abs_tol=COMPOSITION_TOLERANCE):
+            raise ValueError(
+                f"isotope atom fractions for element {self.symbol!r} must sum to 1.0"
+            )
+        return self
 
 
 class SampleComposition(StrictModel):

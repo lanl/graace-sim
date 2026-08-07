@@ -1,0 +1,74 @@
+# PGAA example (1 of 3): nickel at NATURAL isotopic abundance.
+#
+# A thermal (0.025 eV) neutron beam captures on the nickel, and the product
+# nuclei emit prompt gamma rays whose energies are the fingerprint of each
+# isotope. Natural Ni is 68% Ni-58, so its capture spectrum is dominated by
+# Ni-58(n,gamma)Ni-59: a prominent lower-energy line near 465 keV plus a
+# high-energy tail that reaches past 7 MeV (the Ni-58 capture Q-value is
+# ~8999 keV, so the cascade extends up toward ~9 MeV).
+#
+# Compare against ni58_enriched.yaml (pure Ni-58, same fingerprint but cleaner)
+# and ni62_enriched.yaml (pure Ni-62, which has the largest capture cross-section
+# of the nickel isotopes but a lower Q-value ~6838 keV, so its spectrum cuts off
+# near 6.8 MeV). Overlay the three detector spectra to see the high-energy
+# endpoint move with isotopic composition.
+#
+# Note: multi-MeV capture gammas mostly Compton-escape the 60 mm Ge crystal, so
+# the high-energy region reads as a tail rather than sharp full-energy peaks.
+#
+# This element carries NO `isotopes` block, so the engine uses natural
+# abundances -- the everyday case.
+
+# --- Source: a thermal neutron beam (0.025 eV), a point 50 mm before the sample ---
+# Thermal energy is essential: at 14.1 MeV (a DT generator) neutron capture is
+# negligible and you would see fast inelastic scattering instead of clean PGAA
+# capture lines.
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -50}
+  energy:
+    type: mono
+    mono_mev: 0.000000025   # 0.025 eV, a thermal neutron
+
+# --- Sample: a nickel cylinder (radius 10 mm, height 20 mm) at natural abundance ---
+sample:
+  composition:
+    density_g_cm3: 8.908
+    elements:
+      - {symbol: Ni, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 10      # cylinder radius
+  height_mm: 20    # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Detectors: two opposed HPGe crystals, one above and one below the sample ---
+# Each crystal is a cylinder (radius 30 mm, height 50 mm); dimension_mm is its
+# bounding box (60 x 60 x 50 mm). Each detector scores independently into its own
+# output subdirectory: results/hpge_top/... and results/hpge_bottom/....
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: fire enough neutrons to build a spectrum (raise for cleaner peaks) ---
+run:
+  neutrons: 100000
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-08-06"
+  description: PGAA thermal-capture spectrum of natural nickel.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: ni_natural
+  sub_run: 0

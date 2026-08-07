@@ -1,0 +1,67 @@
+# PGAA example (2 of 3): nickel enriched to pure Ni-58.
+#
+# Ni-58 is the dominant natural isotope. Its neutron-capture Q-value is high,
+# ~8999 keV (Ni-58(n,gamma)Ni-59), so the prompt-gamma cascade reaches up to
+# ~9 MeV and the recorded spectrum has a high-energy tail extending past 7 MeV.
+# A prominent lower-energy line sits near 465 keV.
+#
+# Compare against ni62_enriched.yaml: Ni-62 captures MORE neutrons but its
+# Q-value is lower (~6838 keV), so its spectrum cuts off near 6.8 MeV. That
+# high-energy endpoint -- counts above ~6.9 MeV for Ni-58, essentially none for
+# Ni-62 -- is the clearest way to tell the two isotopes apart here.
+#
+# Note: multi-MeV capture gammas mostly Compton-escape the 60 mm Ge crystal, so
+# the high-energy region reads as a tail rather than sharp full-energy peaks; the
+# isotope difference is in where that tail ends. A real enriched sample is never
+# 100% pure -- 1.0 here makes the single-isotope spectrum as clear as possible.
+
+# --- Source: a thermal neutron beam (0.025 eV), a point 50 mm before the sample ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -50}
+  energy:
+    type: mono
+    mono_mev: 0.000000025   # 0.025 eV, a thermal neutron
+
+# --- Sample: a nickel cylinder, all Ni-58 by atom fraction ---
+sample:
+  composition:
+    density_g_cm3: 8.908
+    elements:
+      - symbol: Ni
+        mass_fraction: 1.0
+        isotopes:
+          - {mass_number: 58, atom_fraction: 1.0}
+  shape: cylinder
+  size_mm: 10      # cylinder radius
+  height_mm: 20    # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Detectors: two opposed HPGe crystals, one above and one below the sample ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: fire enough neutrons to build a spectrum (raise for cleaner peaks) ---
+run:
+  neutrons: 100000
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-08-06"
+  description: PGAA thermal-capture spectrum of pure Ni-58.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: ni58_enriched
+  sub_run: 0

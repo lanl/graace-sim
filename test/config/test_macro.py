@@ -36,6 +36,31 @@ def test_example_commands(tmp_path):
     assert "/run/beamOn 10000" in lines
 
 
+def test_no_isotope_command_by_default(tmp_path):
+    lines = _write(load_simulation(EXAMPLE), tmp_path)
+    assert not any(line.startswith("/sample/isotope") for line in lines)
+
+
+def test_isotope_commands_emitted(tmp_path):
+    simulation = load_simulation(EXAMPLE)
+    element = simulation.sample.composition.elements[0]
+    element.isotopes = [
+        {"mass_number": 235, "atom_fraction": 0.9},
+        {"mass_number": 238, "atom_fraction": 0.1},
+    ]
+    lines = _write(simulation, tmp_path)
+
+    isotope_lines = [line for line in lines if line.startswith("/sample/isotope")]
+    assert isotope_lines == [
+        f"/sample/isotope {element.symbol} 235 0.9",
+        f"/sample/isotope {element.symbol} 238 0.1",
+    ]
+    # Isotope lines follow /sample/composition and precede /run/initialize.
+    composition = next(i for i, l in enumerate(lines) if l.startswith("/sample/composition"))
+    initialize = lines.index("/run/initialize")
+    assert composition < lines.index(isotope_lines[0]) < initialize
+
+
 def test_command_order(tmp_path):
     lines = _write(load_simulation(EXAMPLE), tmp_path)
     initialize = lines.index("/run/initialize")

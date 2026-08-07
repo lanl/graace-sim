@@ -4,6 +4,8 @@
 
 #include "G4NistManager.hh"
 #include "G4Material.hh"
+#include "G4Element.hh"
+#include "G4Isotope.hh"
 #include "G4Box.hh"
 #include "G4Orb.hh"
 #include "G4Tubs.hh"
@@ -26,11 +28,66 @@ G4Material* DetectorConstruction::BuildSampleMaterial()
     "sample_material", config.sample_density * g / cm3,
     static_cast<G4int>(config.sample_composition.size()));
 
-  // Add each element by mass fraction. Elements come from the NIST database so
-  // natural isotopic abundances are used.
+  // Add each element by mass fraction. An element with no isotope breakdown comes
+  // from the NIST database, so natural isotopic abundances are used. An element
+  // with a breakdown is built from the specified isotopes by atom fraction.
   for (const auto& part : config.sample_composition) {
-    G4Element* element = nist->FindOrBuildElement(part.first);
-    material->AddElement(element, part.second);
+    const G4String& symbol = part.first;
+    const G4double mass_fraction = part.second;
+
+    auto found = config.sample_isotopes.find(symbol);
+    if (found == config.sample_isotopes.end()) {
+      G4Element* element = nist->FindOrBuildElement(symbol);
+      material->AddElement(element, mass_fraction);
+    } else {
+      const std::vector<SampleIsotope>& isotopes = found->second;
+      if (isotopes.empty()) {
+        G4cerr << "DetectorConstruction: empty isotope list for element '" << symbol
+               << "'; using natural abundances." << G4endl;
+        G4Element* element = nist->FindOrBuildElement(symbol);
+        material->AddElement(element, mass_fraction);
+        continue;
+      }
+
+      // Validate that mass numbers are unique and atom fractions sum to 1.0.
+      G4double total = 0.;
+      bool invalid = false;
+      for (std::size_t i = 0; i < isotopes.size(); ++i) {
+        const auto& iso = isotopes[i];
+        if (iso.mass_number <= 0 || iso.atom_fraction <= 0. || iso.atom_fraction > 1.) {
+          invalid = true;
+          break;
+        }
+        total += iso.atom_fraction;
+        for (std::size_t j = i + 1; j < isotopes.size(); ++j) {
+          if (iso.mass_number == isotopes[j].mass_number) {
+            invalid = true;
+            break;
+          }
+        }
+        if (invalid) {
+          break;
+        }
+      }
+      if (invalid || total < 1.0 - 1e-6 || total > 1.0 + 1e-6) {
+        G4cerr << "DetectorConstruction: invalid isotope breakdown for element '" << symbol
+               << "' (unique mass numbers and atom fractions summing to 1.0 are required); using natural abundances." << G4endl;
+        G4Element* element = nist->FindOrBuildElement(symbol);
+        material->AddElement(element, mass_fraction);
+        continue;
+      }
+
+      G4int Z = nist->FindOrBuildElement(symbol)->GetZasInt();
+      G4Element* element = new G4Element(
+        symbol + "_isotopic", symbol, static_cast<G4int>(isotopes.size()));
+      for (const auto& isotope : isotopes) {
+        // The isotope mass is taken from NIST data for the (Z, mass_number) pair.
+        G4Isotope* nuclide = new G4Isotope(
+          symbol + std::to_string(isotope.mass_number), Z, isotope.mass_number);
+        element->AddIsotope(nuclide, isotope.atom_fraction);
+      }
+      material->AddElement(element, mass_fraction);
+    }
   }
   return material;
 }
