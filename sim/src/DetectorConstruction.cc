@@ -95,11 +95,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   // --- Detectors: one or more HPGe (germanium) cylinders, made sensitive below.
-  // Each is named "detector_<i>" so its hits are recorded under a distinct name.
+  // Each takes its configured name so its hits are recorded under that name.
   G4Material* germanium = nist->FindOrBuildMaterial("G4_Ge");
   for (std::size_t i = 0; i < config.detectors.size(); ++i) {
     const DetectorBlock& detector = config.detectors[i];
-    G4String name = "detector_" + std::to_string(i);
+    const G4String& name = detector.name;
     G4Tubs* detSolid = new G4Tubs(name, 0., detector.radius * mm,
                                   0.5 * detector.height * mm, 0., twopi);
     G4LogicalVolume* detLV = new G4LogicalVolume(detSolid, germanium, name);
@@ -116,10 +116,9 @@ void DetectorConstruction::ConstructSDandField()
   const Config& config = Config::Instance();
 
   // Mark each detector volume as sensitive so its gamma hits are recorded.
-  for (std::size_t i = 0; i < config.detectors.size(); ++i) {
-    G4String name = "detector_" + std::to_string(i);
-    SensitiveDetector* sd = new SensitiveDetector(name);
+  for (const DetectorBlock& detector : config.detectors) {
+    SensitiveDetector* sd = new SensitiveDetector(detector.name);
     G4SDManager::GetSDMpointer()->AddNewDetector(sd);
-    SetSensitiveDetector(name, sd);
+    SetSensitiveDetector(detector.name, sd);
   }
 }
