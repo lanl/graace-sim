@@ -134,7 +134,26 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     std::istringstream in(value);
     DetectorBlock detector;
     double x = 0, y = 0, z = 0;
-    in >> detector.name >> detector.radius >> detector.height >> x >> y >> z;
+    if (!(in >> detector.name >> detector.radius >> detector.height >> x >> y >> z)) {
+      G4cerr << "Messenger: invalid /detector/add args; expected: name radius_mm height_mm x y z" << G4endl;
+      return;
+    }
+    if (detector.name.empty() || detector.name == "." || detector.name == ".." ||
+        detector.name.find('/') != G4String::npos || detector.name.find('\\') != G4String::npos) {
+      G4cerr << "Messenger: unsafe detector name '" << detector.name << "'" << G4endl;
+      return;
+    }
+    if (detector.radius <= 0. || detector.height <= 0.) {
+      G4cerr << "Messenger: detector radius/height must be > 0 mm; got radius=" << detector.radius
+             << ", height=" << detector.height << G4endl;
+      return;
+    }
+    for (const auto& existing : config.detectors) {
+      if (existing.name == detector.name) {
+        G4cerr << "Messenger: duplicate detector name '" << detector.name << "'; names must be unique." << G4endl;
+        return;
+      }
+    }
     detector.position = {x, y, z};
     config.detectors.push_back(detector);
 
