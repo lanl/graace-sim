@@ -41,9 +41,53 @@ G4Material* DetectorConstruction::BuildSampleMaterial()
       material->AddElement(element, mass_fraction);
     } else {
       const std::vector<SampleIsotope>& isotopes = found->second;
+      if (isotopes.empty()) {
+        G4cerr << "DetectorConstruction: empty isotope list for element '" << symbol
+               << "'; using natural abundances." << G4endl;
+        G4Element* element = nist->FindOrBuildElement(symbol);
+        material->AddElement(element, mass_fraction);
+        continue;
+      }
+
+      // Validate that mass numbers are unique and atom fractions sum to 1.0.
+      G4double total = 0.;
+      bool invalid = false;
+      for (std::size_t i = 0; i < isotopes.size(); ++i) {
+        const auto& iso = isotopes[i];
+        if (iso.mass_number <= 0 || iso.atom_fraction <= 0. || iso.atom_fraction > 1.) {
+          invalid = true;
+          break;
+        }
+        total += iso.atom_fraction;
+        for (std::size_t j = i + 1; j < isotopes.size(); ++j) {
+          if (iso.mass_number == isotopes[j].mass_number) {
+            invalid = true;
+            break;
+          }
+        }
+        if (invalid) {
+          break;
+        }
+      }
+      if (invalid || total < 1.0 - 1e-6 || total > 1.0 + 1e-6) {
+        G4cerr << "DetectorConstruction: invalid isotope breakdown for element '" << symbol
+               << "' (unique mass numbers and atom fractions summing to 1.0 are required); using natural abundances." << G4endl;
+        G4Element* element = nist->FindOrBuildElement(symbol);
+        material->AddElement(element, mass_fraction);
+        continue;
+      }
+
       G4int Z = nist->FindOrBuildElement(symbol)->GetZasInt();
       G4Element* element = new G4Element(
         symbol + "_isotopic", symbol, static_cast<G4int>(isotopes.size()));
+      for (const auto& isotope : isotopes) {
+        // Geant4 uses the mass number as an approximation unless an explicit atomic mass is provided.
+        G4Isotope* nuclide = new G4Isotope(
+          symbol + std::to_string(isotope.mass_number), Z, isotope.mass_number);
+        element->AddIsotope(nuclide, isotope.atom_fraction);
+      }
+      material->AddElement(element, mass_fraction);
+    }
       for (const auto& isotope : isotopes) {
         // The isotope mass is taken from NIST data for the (Z, mass_number) pair.
         G4Isotope* nuclide = new G4Isotope(
