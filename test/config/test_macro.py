@@ -3,7 +3,10 @@ and each richer source/detector/shielding feature emits its command."""
 
 from pathlib import Path
 
-from config.macro import write_macro
+import pytest
+
+from config import macro as macro_module
+from config.macro import _thread_count, write_macro
 from config.yaml_io import load_simulation
 from models.simulation import Simulation
 
@@ -149,3 +152,70 @@ def test_periodic_timing(tmp_path):
     assert "/source/timing periodic" in lines
     assert "/source/pulseWidth 5" in lines
     assert "/source/pulsePeriod 1000" in lines
+
+
+# --- Thread count from the CPU-percent cap ---
+
+
+@pytest.mark.parametrize(
+    "cores, percent, expected",
+    [
+        (16, 80, 12),   # 16 * 80 // 100 = 12
+        (8, 80, 6),     # 8 * 80 // 100 = 6
+        (16, 100, 16),  # the whole machine
+        (16, 1, 1),     # floors at 1, never 0
+        (1, 50, 1),     # a single-core machine still gets one thread
+        (10, 90, 9),
+    ],
+)
+def test_thread_count_formula(monkeypatch, cores, percent, expected):
+    # Fix the core count so the test is independent of the machine it runs on.
+    monkeypatch.setattr(macro_module.os, "cpu_count", lambda: cores)
+    assert _thread_count(percent) == expected
+
+
+def test_thread_count_falls_back_to_one_when_cores_unknown(monkeypatch):
+    monkeypatch.setattr(macro_module.os, "cpu_count", lambda: None)
+    assert _thread_count(80) == 1
+
+
+def test_macro_sets_thread_count_before_initialize(tmp_path, monkeypatch):
+    monkeypatch.setattr(macro_module.os, "cpu_count", lambda: 16)
+    simulation = load_simulation(EXAMPLE)  # default cpu_percent = 80
+    lines = _write(simulation, tmp_path)
+
+    assert "/run/numberOfThreads 12" in lines
+    # The thread count must be set before the run is initialized.
+    assert lines.index("/run/numberOfThreads 12") < lines.index("/run/initialize")
+
+
+def test_macro_thread_count_follows_cpu_percent(tmp_path, monkeypatch):
+    monkeypatch.setattr(macro_module.os, "cpu_count", lambda: 16)
+    simulation = load_simulation(EXAMPLE)
+    simulation.runner.cpu_percent = 50
+    lines = _write(simulation, tmp_path)
+
+    assert "/run/numberOfThreads 8" in lines
+
+
+# --- Random seed ---
+
+
+def test_macro_sets_the_configured_seed(tmp_path):
+    simulation = load_simulation(EXAMPLE)
+    simulation.run.seed = 12345
+    lines = _write(simulation, tmp_path)
+
+    assert "/random/setSeeds 12345 12345" in lines
+
+
+def test_seed_command_between_initialize_and_beamon(tmp_path):
+    simulation = load_simulation(EXAMPLE)
+    lines = _write(simulation, tmp_path)
+
+    # The seed must be set after the run is initialized and before the beam runs.
+    seed = next(i for i, line in enumerate(lines) if line.startswith("/random/setSeeds"))
+    assert lines.index("/run/initialize") < seed
+    assert seed < next(
+        i for i, line in enumerate(lines) if line.startswith("/run/beamOn")
+    )

@@ -17,6 +17,19 @@ def test_defaults():
     assert runner.binary == "graace-sim"
     assert runner.show_progress is True
     assert runner.verify_output is True
+    # Below 100 so a run leaves the machine responsive by default.
+    assert runner.cpu_percent == 80
+
+
+@pytest.mark.parametrize("bad_percent", [0, -1, 101, 200])
+def test_cpu_percent_out_of_range_is_rejected(bad_percent):
+    with pytest.raises(ValidationError):
+        SimRunner(cpu_percent=bad_percent)
+
+
+@pytest.mark.parametrize("good_percent", [1, 50, 100])
+def test_cpu_percent_in_range_is_accepted(good_percent):
+    assert SimRunner(cpu_percent=good_percent).cpu_percent == good_percent
 
 
 @pytest.mark.parametrize("bad_binary", ["", "   ", "\t"])
