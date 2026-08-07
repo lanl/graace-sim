@@ -81,14 +81,6 @@ G4Material* DetectorConstruction::BuildSampleMaterial()
       G4Element* element = new G4Element(
         symbol + "_isotopic", symbol, static_cast<G4int>(isotopes.size()));
       for (const auto& isotope : isotopes) {
-        // Geant4 uses the mass number as an approximation unless an explicit atomic mass is provided.
-        G4Isotope* nuclide = new G4Isotope(
-          symbol + std::to_string(isotope.mass_number), Z, isotope.mass_number);
-        element->AddIsotope(nuclide, isotope.atom_fraction);
-      }
-      material->AddElement(element, mass_fraction);
-    }
-      for (const auto& isotope : isotopes) {
         // The isotope mass is taken from NIST data for the (Z, mass_number) pair.
         G4Isotope* nuclide = new G4Isotope(
           symbol + std::to_string(isotope.mass_number), Z, isotope.mass_number);
