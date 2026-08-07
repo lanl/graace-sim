@@ -40,8 +40,6 @@ Once the GRAACE-SIM environment is set up and the simulation is built, you can r
      logs/run.log                   the engine's streamed output
    ```
 
-   Re-running the same config is safe: it re-writes the macro and re-runs.
-
 2. Run the simulation to verfify geometries and run interactively:
 
    ```
