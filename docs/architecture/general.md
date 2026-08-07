@@ -121,7 +121,7 @@ The top-level model describes one experiment and doubles as the run record:
 ```python
 class Simulation(StrictModel):
     source: Source          # the neutron source
-    sample: Sample          # the material being assayed
+    sample: Sample | None = None   # the material being assayed; optional
     detectors: list[Detector]
     shielding: list[Shielding] = []
     run: RunSettings        # number of events, random seed, physics options
