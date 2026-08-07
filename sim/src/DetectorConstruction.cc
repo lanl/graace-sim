@@ -83,11 +83,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
              << block.material << "'; skipping this block." << G4endl;
       continue;
     }
+    const std::string shieldName = "shielding_" + std::to_string(i);
     G4Box* shieldSolid = new G4Box(
-      "shielding", kSlabHalfWidth * mm, kSlabHalfWidth * mm,
+      shieldName.c_str(), kSlabHalfWidth * mm, kSlabHalfWidth * mm,
       0.5 * block.thickness * mm);
     G4LogicalVolume* shieldLV =
-      new G4LogicalVolume(shieldSolid, shieldMat, "shielding");
+      new G4LogicalVolume(shieldSolid, shieldMat, shieldName.c_str());
     shieldLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.6, 0.6, 0.6)));
     new G4PVPlacement(nullptr, block.position * mm, shieldLV,
                       "shielding_" + std::to_string(i), worldLV, false,
