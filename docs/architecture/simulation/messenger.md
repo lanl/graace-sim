@@ -30,12 +30,16 @@ Vectors are `x y z` in mm. The current commands:
 | `/sample/size` | mm | `sample_size` |
 | `/sample/height` | mm (cylinder) | `sample_height` |
 | `/sample/position` | `x y z` (mm) | `sample_position` |
-| `/detector/add` | `radius_mm height_mm x y z` | one entry in `detectors` |
+| `/detector/add` | `name radius_mm height_mm x y z` | one entry in `detectors` |
 | `/shielding/add` | `material thickness_mm x y z` | one entry in `shielding` |
-| `/output/file` | path | `output_file` |
+| `/output/file` | base path | `output_file` |
 
 `/detector/add` and `/shielding/add` append one item per line, so a run can hold
-several. The first `/detector/add` replaces the built-in default detector.
+several. The first `/detector/add` replaces the built-in default detector. A
+detector's name labels both its volume and its output subdirectory.
+
+`/output/file` sets the base Parquet path; each detector's hits are written into
+its own subdirectory, `results/<detector_name>/gamma_hits-part-NNNNN.parquet`.
 
 ## What a messenger does
 
