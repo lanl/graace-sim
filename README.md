@@ -1,3 +1,7 @@
+
+
+![GRAACE-SIM banner](docs/images/Banner.jpg)
+
 # graace-sim
 
 GRAACE-SIM is a material-agnostic GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments, enabling users to configure materials and geometries, run simulations, and generate prompt gamma data for experiment planning and analysis development.
@@ -52,7 +56,7 @@ Once the GRAACE-SIM environment is set up and the simulation is built, you can r
    /run/beamOn 100
    ```
 
-   This will run the simulation for 100 neutron beam events.
+   This will run the simulation for 100 neutron beam events. Don't do anything over 1000 otherwise it becomes visually cluttered in the GEANT4 interactive viewer.
 
 ## Copyright
 
