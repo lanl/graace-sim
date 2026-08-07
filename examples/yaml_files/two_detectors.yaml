@@ -26,12 +26,15 @@ sample:
 # --- Detectors: two HPGe crystals, one on each side of the sample ---
 # Each crystal is a cylinder (radius 30 mm, height 50 mm); dimension_mm is its
 # bounding box (60 x 60 x 50 mm). The writer maps the box back to the crystal:
-# radius = x_mm / 2, height = z_mm.
+# radius = x_mm / 2, height = z_mm. Each detector's name labels its output
+# subdirectory: results/hpge_top/... and results/hpge_bottom/....
 detectors:
-  - type: HPGe
+  - name: hpge_top
+    type: HPGe
     position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
     dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
-  - type: HPGe
+  - name: hpge_bottom
+    type: HPGe
     position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
     dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
 
