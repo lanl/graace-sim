@@ -107,26 +107,31 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     nullptr, {}, worldLV, "world", nullptr, false, 0, true);
 
   // --- Sample: a simple shape of the configured material ---
-  G4Material* sampleMat = BuildSampleMaterial();
-  G4VSolid* sampleSolid = nullptr;
-  if (config.sample_shape == "cube") {
-    G4double half = 0.5 * config.sample_size * mm;
-    sampleSolid = new G4Box("sample", half, half, half);
-  } else if (config.sample_shape == "sphere") {
-    sampleSolid = new G4Orb("sample", config.sample_size * mm);
-  } else if (config.sample_shape == "cylinder") {
-    sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
-                             0.5 * config.sample_height * mm, 0., twopi);
-  } else {
-    G4cerr << "DetectorConstruction: unknown sample shape '" << config.sample_shape
-           << "'; expected cube|sphere|cylinder. Using cylinder." << G4endl;
-    sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
-                             0.5 * config.sample_height * mm, 0., twopi);
+  // The sample is optional. An empty composition (no /sample/composition
+  // command in the macro) means no sample, so the sample volume is skipped and
+  // the world holds only the source, detectors, and any shielding.
+  if (!config.sample_composition.empty()) {
+    G4Material* sampleMat = BuildSampleMaterial();
+    G4VSolid* sampleSolid = nullptr;
+    if (config.sample_shape == "cube") {
+      G4double half = 0.5 * config.sample_size * mm;
+      sampleSolid = new G4Box("sample", half, half, half);
+    } else if (config.sample_shape == "sphere") {
+      sampleSolid = new G4Orb("sample", config.sample_size * mm);
+    } else if (config.sample_shape == "cylinder") {
+      sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
+                               0.5 * config.sample_height * mm, 0., twopi);
+    } else {
+      G4cerr << "DetectorConstruction: unknown sample shape '" << config.sample_shape
+             << "'; expected cube|sphere|cylinder. Using cylinder." << G4endl;
+      sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
+                               0.5 * config.sample_height * mm, 0., twopi);
+    }
+    G4LogicalVolume* sampleLV = new G4LogicalVolume(sampleSolid, sampleMat, "sample");
+    sampleLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.3, 0.6, 1.0)));
+    new G4PVPlacement(nullptr, config.sample_position * mm, sampleLV, "sample",
+                      worldLV, false, 0, true);
   }
-  G4LogicalVolume* sampleLV = new G4LogicalVolume(sampleSolid, sampleMat, "sample");
-  sampleLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.3, 0.6, 1.0)));
-  new G4PVPlacement(nullptr, config.sample_position * mm, sampleLV, "sample",
-                    worldLV, false, 0, true);
 
   // --- Shielding: optional slabs of a named material ---
   // Each slab is a square footprint kSlabHalfWidth on a side, the configured
