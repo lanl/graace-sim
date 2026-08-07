@@ -41,6 +41,7 @@ private:
 
   // --- /sample/* ---
   std::unique_ptr<G4UIcommand> fSampleComposition;
+  std::unique_ptr<G4UIcommand> fSampleIsotope;
   std::unique_ptr<G4UIcommand> fSampleDensity;
   std::unique_ptr<G4UIcommand> fSampleShape;
   std::unique_ptr<G4UIcommand> fSampleSize;
