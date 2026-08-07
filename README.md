@@ -27,7 +27,7 @@ Once the GRAACE-SIM environment is set up and the simulation is built, you can r
 1. Run via a yaml config file from the root directory:
 
    ```
-   pixi run python examples/run_from_yaml.py examples/yaml_files/ni58_enriched.yaml
+   pixi run python examples/scripts/run_from_yaml.py examples/yaml_files/ni58_enriched.yaml
    ```
 
    This writes the macro, launches the simulation, shows the progress, and saves outputs
