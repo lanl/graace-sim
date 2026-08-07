@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(graace-sim)
 
 # --- GEANT4 with UI and visualization drivers ---
-# The conda-forge GEANT4 is built with HDF5 analysis support, and its HDF5 is
-# not thread-safe, so GEANT4's config aborts in multithreaded mode. We run the
-# Serial run manager and write Parquet (not HDF5), so this does not matter.
-# Pre-setting GEANT4's thread-safety probe result skips that fatal check — the
-# probe is cached and left alone if already defined.
 set(GEANT4_HAVE_H5_HAVE_THREADSAFE TRUE CACHE INTERNAL "skip HDF5 thread-safety check")
 find_package(Geant4 REQUIRED ui_all vis_all)
 include(${Geant4_USE_FILE})
