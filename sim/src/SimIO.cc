@@ -19,42 +19,44 @@ SimIO& SimIO::Instance()
 void SimIO::Open(const G4String& path)
 {
   fPath = path;
-  fHits.clear();
-  fPartIndex = 0;
-  fTotalHits = 0;
+  fBuckets.clear();
 }
 
 void SimIO::Add(const GammaHit& hit)
 {
-  fHits.push_back(hit);
-  // Flush to a part file once the buffer is full so memory use stays bounded.
-  if (fHits.size() >= kMaxHitsPerFile) {
-    WritePart();
+  Bucket& bucket = fBuckets[hit.detector];
+  bucket.hits.push_back(hit);
+  // Flush to a part file once this detector's buffer is full so memory use
+  // stays bounded.
+  if (bucket.hits.size() >= kMaxHitsPerFile) {
+    WritePart(hit.detector, bucket);
   }
 }
 
 void SimIO::Write()
 {
-  // Write whatever is left in the buffer as the final part.
-  if (!fHits.empty()) {
-    WritePart();
+  // Write whatever is left in each detector's buffer as its final part.
+  std::size_t totalHits = 0;
+  std::size_t totalParts = 0;
+  for (auto& entry : fBuckets) {
+    if (!entry.second.hits.empty()) {
+      WritePart(entry.first, entry.second);
+    }
+    totalHits += entry.second.totalHits;
+    totalParts += static_cast<std::size_t>(entry.second.partIndex);
   }
-  G4cout << "SimIO: wrote " << fTotalHits << " gamma hits in " << fPartIndex
-         << " part file(s)" << G4endl;
+  G4cout << "SimIO: wrote " << totalHits << " gamma hits in " << totalParts
+         << " part file(s) across " << fBuckets.size() << " detector(s)" << G4endl;
 }
 
-void SimIO::WritePart()
+void SimIO::WritePart(const G4String& detector, Bucket& bucket)
 {
-  // Build the three columns from the buffered hits.
-  arrow::StringBuilder   detectorBuilder;
+  // Build the columns from the buffered hits. The detector name is not a column:
+  // every hit in this file is from the same detector, named by its directory.
   arrow::DoubleBuilder   energyBuilder;
   arrow::DoubleBuilder   timeBuilder;
 
-  for (const auto& hit : fHits) {
-    if (auto st = detectorBuilder.Append(hit.detector); !st.ok()) {
-      G4cerr << "SimIO: failed to append detector value: " << st.ToString() << G4endl;
-      return;
-    }
+  for (const auto& hit : bucket.hits) {
     if (auto st = energyBuilder.Append(hit.energy); !st.ok()) {
       G4cerr << "SimIO: failed to append energy value: " << st.ToString() << G4endl;
       return;
@@ -65,11 +67,7 @@ void SimIO::WritePart()
     }
   }
 
-  std::shared_ptr<arrow::Array> detectorArray, energyArray, timeArray;
-  if (auto st = detectorBuilder.Finish(&detectorArray); !st.ok()) {
-    G4cerr << "SimIO: failed to finish detector column: " << st.ToString() << G4endl;
-    return;
-  }
+  std::shared_ptr<arrow::Array> energyArray, timeArray;
   if (auto st = energyBuilder.Finish(&energyArray); !st.ok()) {
     G4cerr << "SimIO: failed to finish energy column: " << st.ToString() << G4endl;
     return;
@@ -80,21 +78,23 @@ void SimIO::WritePart()
   }
 
   auto schema = arrow::schema({
-    arrow::field("detector", arrow::utf8()),
     arrow::field("energy", arrow::float64()),
     arrow::field("time", arrow::float64()),
   });
-  auto table = arrow::Table::Make(schema, {detectorArray, energyArray, timeArray});
+  auto table = arrow::Table::Make(schema, {energyArray, timeArray});
 
-  // Turn "dir/hits.parquet" into "dir/hits-part-0000.parquet".
+  // Turn "dir/gamma_hits.parquet" into
+  // "dir/<detector>/gamma_hits-part-00000.parquet": the detector name becomes a
+  // subdirectory so each detector's parts live together.
   std::filesystem::path base(fPath.c_str());
   std::ostringstream name;
   name << base.stem().string() << "-part-"
-       << std::setw(4) << std::setfill('0') << fPartIndex
+       << std::setw(5) << std::setfill('0') << bucket.partIndex
        << base.extension().string();
-  std::filesystem::path partPath = base.has_parent_path()
-    ? base.parent_path() / name.str()
-    : std::filesystem::path(name.str());
+  std::filesystem::path detectorDir = base.has_parent_path()
+    ? base.parent_path() / detector.c_str()
+    : std::filesystem::path(detector.c_str());
+  std::filesystem::path partPath = detectorDir / name.str();
 
   // Make sure the output directory exists.
   if (partPath.has_parent_path()) {
@@ -123,10 +123,10 @@ void SimIO::WritePart()
     return;
   }
 
-  G4cout << "SimIO: wrote " << fHits.size() << " gamma hits to "
+  G4cout << "SimIO: wrote " << bucket.hits.size() << " gamma hits to "
          << partPath.string() << G4endl;
 
-  fTotalHits += fHits.size();
-  ++fPartIndex;
-  fHits.clear();
+  bucket.totalHits += bucket.hits.size();
+  ++bucket.partIndex;
+  bucket.hits.clear();
 }

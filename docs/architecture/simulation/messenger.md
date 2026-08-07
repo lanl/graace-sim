@@ -7,6 +7,40 @@ turns a line of a macro into a stored value the rest of the engine reads.
 
 It is built on GEANT4's `G4UImessenger`.
 
+## The commands
+
+Every command takes its whole argument as one string, parsed in `SetNewValue`.
+Vectors are `x y z` in mm. The current commands:
+
+| Command | Argument | Config field |
+| --- | --- | --- |
+| `/source/particle` | name | `source_particle` |
+| `/source/position` | `x y z` (mm) | `source_position` |
+| `/source/shape` | `point \| disk \| beam` | `source_shape` |
+| `/source/radius` | mm (disk/beam) | `source_radius` |
+| `/source/energyType` | `mono \| spectrum` | `source_energy_type` |
+| `/source/energy` | MeV (mono) | `source_energy` |
+| `/source/spectrumFile` | path to an `energy_mev intensity` list | `source_spectrum_file` |
+| `/source/timing` | `continuous \| single \| periodic` | `source_timing` |
+| `/source/pulseWidth` | ns (single/periodic) | `source_pulse_width_ns` |
+| `/source/pulsePeriod` | ns (periodic) | `source_pulse_period_ns` |
+| `/sample/composition` | `Sym frac Sym frac ...` | `sample_composition` |
+| `/sample/density` | g/cm3 | `sample_density` |
+| `/sample/shape` | `cube \| sphere \| cylinder` | `sample_shape` |
+| `/sample/size` | mm | `sample_size` |
+| `/sample/height` | mm (cylinder) | `sample_height` |
+| `/sample/position` | `x y z` (mm) | `sample_position` |
+| `/detector/add` | `name radius_mm height_mm x y z` | one entry in `detectors` |
+| `/shielding/add` | `material thickness_mm x y z` | one entry in `shielding` |
+| `/output/file` | base path | `output_file` |
+
+`/detector/add` and `/shielding/add` append one item per line, so a run can hold
+several. The first `/detector/add` replaces the built-in default detector. A
+detector's name labels both its volume and its output subdirectory.
+
+`/output/file` sets the base Parquet path; each detector's hits are written into
+its own subdirectory, `results/<detector_name>/gamma_hits-part-NNNNN.parquet`.
+
 ## What a messenger does
 
 <!-- Outline: registers command directories and commands; parses each command's

@@ -19,6 +19,11 @@ private:
   // Build the sample material from the element mass-fraction composition and
   // density stored in Config.
   G4Material* BuildSampleMaterial();
+
+  // Half the side of a shielding slab's square footprint, in Geant4 length
+  // units. A fixed footprint keeps the /shielding/add command to material,
+  // thickness, and position.
+  static constexpr double kSlabHalfWidth = 100.;  // mm before unit scaling
 };
 
 #endif

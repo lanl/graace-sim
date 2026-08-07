@@ -30,12 +30,22 @@ Messenger::Messenger()
   fSampleDir->SetGuidance("Sample configuration");
   fDetectorDir = std::make_unique<G4UIdirectory>("/detector/");
   fDetectorDir->SetGuidance("Gamma detector configuration");
+  fShieldingDir = std::make_unique<G4UIdirectory>("/shielding/");
+  fShieldingDir->SetGuidance("Shielding configuration");
   fOutputDir   = std::make_unique<G4UIdirectory>("/output/");
   fOutputDir->SetGuidance("Output configuration");
 
   fSourceParticle = MakeCommand("/source/particle", "Source particle name", this);
   fSourceEnergy   = MakeCommand("/source/energy", "Source energy in MeV", this);
   fSourcePosition = MakeCommand("/source/position", "Source position: x y z (mm)", this);
+  fSourceShape    = MakeCommand("/source/shape", "Source emission shape: point | disk | beam", this);
+  fSourceRadius   = MakeCommand("/source/radius", "Source disk/beam radius in mm", this);
+  fSourceEnergyType = MakeCommand("/source/energyType", "Source energy type: mono | spectrum", this);
+  fSourceSpectrumFile = MakeCommand(
+    "/source/spectrumFile", "Path to an energy_mev intensity spectrum list file", this);
+  fSourceTiming     = MakeCommand("/source/timing", "Source timing: continuous | single | periodic", this);
+  fSourcePulseWidth = MakeCommand("/source/pulseWidth", "Pulse width in ns (single/periodic)", this);
+  fSourcePulsePeriod = MakeCommand("/source/pulsePeriod", "Pulse period in ns (periodic)", this);
 
   fSampleComposition = MakeCommand(
     "/sample/composition",
@@ -46,9 +56,13 @@ Messenger::Messenger()
   fSampleHeight   = MakeCommand("/sample/height", "Cylinder height in mm", this);
   fSamplePosition = MakeCommand("/sample/position", "Sample position: x y z (mm)", this);
 
-  fDetectorRadius   = MakeCommand("/detector/radius", "Detector crystal radius in mm", this);
-  fDetectorHeight   = MakeCommand("/detector/height", "Detector crystal height in mm", this);
-  fDetectorPosition = MakeCommand("/detector/position", "Detector position: x y z (mm)", this);
+  fDetectorAdd = MakeCommand(
+    "/detector/add",
+    "Add a detector: name radius_mm height_mm x y z (mm). Replaces the default set.", this);
+
+  fShieldingAdd = MakeCommand(
+    "/shielding/add",
+    "Add shielding: material thickness_mm x y z (mm), e.g. G4_Pb 50 0 0 40", this);
 
   fOutputFile = MakeCommand("/output/file", "Output Parquet file path", this);
 }
@@ -75,6 +89,20 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     config.source_energy = std::stod(value);
   } else if (command == fSourcePosition.get()) {
     config.source_position = ParseVector(value);
+  } else if (command == fSourceShape.get()) {
+    config.source_shape = value;
+  } else if (command == fSourceRadius.get()) {
+    config.source_radius = std::stod(value);
+  } else if (command == fSourceEnergyType.get()) {
+    config.source_energy_type = value;
+  } else if (command == fSourceSpectrumFile.get()) {
+    config.source_spectrum_file = value;
+  } else if (command == fSourceTiming.get()) {
+    config.source_timing = value;
+  } else if (command == fSourcePulseWidth.get()) {
+    config.source_pulse_width_ns = std::stod(value);
+  } else if (command == fSourcePulsePeriod.get()) {
+    config.source_pulse_period_ns = std::stod(value);
 
   } else if (command == fSampleComposition.get()) {
     // Parse alternating element symbol and mass fraction.
@@ -97,12 +125,53 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
   } else if (command == fSamplePosition.get()) {
     config.sample_position = ParseVector(value);
 
-  } else if (command == fDetectorRadius.get()) {
-    config.detector_radius = std::stod(value);
-  } else if (command == fDetectorHeight.get()) {
-    config.detector_height = std::stod(value);
-  } else if (command == fDetectorPosition.get()) {
-    config.detector_position = ParseVector(value);
+  } else if (command == fDetectorAdd.get()) {
+    // name radius_mm height_mm x y z. The first add replaces the default set.
+    if (!fDetectorsCleared) {
+      config.detectors.clear();
+      fDetectorsCleared = true;
+    }
+    std::istringstream in(value);
+    DetectorBlock detector;
+    double x = 0, y = 0, z = 0;
+    if (!(in >> detector.name >> detector.radius >> detector.height >> x >> y >> z)) {
+      G4cerr << "Messenger: invalid /detector/add args; expected: name radius_mm height_mm x y z" << G4endl;
+      return;
+    }
+    if (detector.name.empty() || detector.name == "." || detector.name == ".." ||
+        detector.name.find('/') != G4String::npos || detector.name.find('\\') != G4String::npos) {
+      G4cerr << "Messenger: unsafe detector name '" << detector.name << "'" << G4endl;
+      return;
+    }
+    if (detector.radius <= 0. || detector.height <= 0.) {
+      G4cerr << "Messenger: detector radius/height must be > 0 mm; got radius=" << detector.radius
+             << ", height=" << detector.height << G4endl;
+      return;
+    }
+    for (const auto& existing : config.detectors) {
+      if (existing.name == detector.name) {
+        G4cerr << "Messenger: duplicate detector name '" << detector.name << "'; names must be unique." << G4endl;
+        return;
+      }
+    }
+    detector.position = {x, y, z};
+    config.detectors.push_back(detector);
+
+  } else if (command == fShieldingAdd.get()) {
+    // material thickness_mm x y z.
+    std::istringstream in(value);
+    ShieldingBlock block;
+    double x = 0, y = 0, z = 0;
+    if (!(in >> block.material >> block.thickness >> x >> y >> z)) {
+      G4cerr << "Messenger: invalid /shielding/add args; expected: material thickness_mm x y z" << G4endl;
+      return;
+    }
+    if (block.thickness <= 0.) {
+      G4cerr << "Messenger: shielding thickness must be > 0 mm; got " << block.thickness << G4endl;
+      return;
+    }
+    block.position = {x, y, z};
+    config.shielding.push_back(block);
 
   } else if (command == fOutputFile.get()) {
     config.output_file = value;

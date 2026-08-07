@@ -14,6 +14,9 @@
 #include "G4PhysicalConstants.hh"
 #include "G4VisAttributes.hh"
 #include "G4ios.hh"
+
+#include <string>
+
 G4Material* DetectorConstruction::BuildSampleMaterial()
 {
   const Config& config = Config::Instance();
@@ -68,22 +71,55 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   new G4PVPlacement(nullptr, config.sample_position * mm, sampleLV, "sample",
                     worldLV, false, 0, true);
 
-  // --- Detector: an HPGe (germanium) cylinder, made sensitive below ---
+  // --- Shielding: optional slabs of a named material ---
+  // Each slab is a square footprint kSlabHalfWidth on a side, the configured
+  // thickness deep (along z). A fixed footprint keeps the command to material,
+  // thickness, and position; a configurable footprint can be added later.
+  for (std::size_t i = 0; i < config.shielding.size(); ++i) {
+    const ShieldingBlock& block = config.shielding[i];
+    G4Material* shieldMat = nist->FindOrBuildMaterial(block.material);
+    if (shieldMat == nullptr) {
+      G4cerr << "DetectorConstruction: unknown shielding material '"
+             << block.material << "'; skipping this block." << G4endl;
+      continue;
+    }
+    const std::string shieldName = "shielding_" + std::to_string(i);
+    G4Box* shieldSolid = new G4Box(
+      shieldName.c_str(), kSlabHalfWidth * mm, kSlabHalfWidth * mm,
+      0.5 * block.thickness * mm);
+    G4LogicalVolume* shieldLV =
+      new G4LogicalVolume(shieldSolid, shieldMat, shieldName.c_str());
+    shieldLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.6, 0.6, 0.6)));
+    new G4PVPlacement(nullptr, block.position * mm, shieldLV,
+                      "shielding_" + std::to_string(i), worldLV, false,
+                      static_cast<G4int>(i), true);
+  }
+
+  // --- Detectors: one or more HPGe (germanium) cylinders, made sensitive below.
+  // Each takes its configured name so its hits are recorded under that name.
   G4Material* germanium = nist->FindOrBuildMaterial("G4_Ge");
-  G4Tubs* detSolid = new G4Tubs("detector", 0., config.detector_radius * mm,
-                                0.5 * config.detector_height * mm, 0., twopi);
-  G4LogicalVolume* detLV = new G4LogicalVolume(detSolid, germanium, "detector");
-  detLV->SetVisAttributes(new G4VisAttributes(G4Colour(1.0, 0.5, 0.0)));
-  new G4PVPlacement(nullptr, config.detector_position * mm, detLV, "detector",
-                    worldLV, false, 0, true);
+  for (std::size_t i = 0; i < config.detectors.size(); ++i) {
+    const DetectorBlock& detector = config.detectors[i];
+    const G4String& name = detector.name;
+    G4Tubs* detSolid = new G4Tubs(name, 0., detector.radius * mm,
+                                  0.5 * detector.height * mm, 0., twopi);
+    G4LogicalVolume* detLV = new G4LogicalVolume(detSolid, germanium, name);
+    detLV->SetVisAttributes(new G4VisAttributes(G4Colour(1.0, 0.5, 0.0)));
+    new G4PVPlacement(nullptr, detector.position * mm, detLV, name,
+                      worldLV, false, static_cast<G4int>(i), true);
+  }
 
   return worldPV;
 }
 
 void DetectorConstruction::ConstructSDandField()
 {
-  // Mark the detector volume as sensitive so gamma hits are recorded.
-  SensitiveDetector* sd = new SensitiveDetector("detector");
-  G4SDManager::GetSDMpointer()->AddNewDetector(sd);
-  SetSensitiveDetector("detector", sd);
+  const Config& config = Config::Instance();
+
+  // Mark each detector volume as sensitive so its gamma hits are recorded.
+  for (const DetectorBlock& detector : config.detectors) {
+    SensitiveDetector* sd = new SensitiveDetector(detector.name);
+    G4SDManager::GetSDMpointer()->AddNewDetector(sd);
+    SetSensitiveDetector(detector.name, sd);
+  }
 }

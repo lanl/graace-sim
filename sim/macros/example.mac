@@ -4,11 +4,6 @@
 # Geometry and materials must be configured before /run/initialize; the source
 # and the run come after.
 
-# --- Source: 14.1 MeV (DT generator) neutrons ---
-/source/particle neutron
-/source/energy 14.1
-/source/position 0 0 -50
-
 # --- Sample: an iron cylinder (radius 10 mm, height 20 mm) ---
 /sample/composition Fe 1.0
 /sample/density 7.87
@@ -17,15 +12,23 @@
 /sample/height 20
 /sample/position 0 0 0
 
-# --- Detector: an HPGe crystal beside the sample ---
-/detector/radius 30
-/detector/height 50
-/detector/position 0 80 0
+# --- Detector: an HPGe crystal (radius 30 mm, height 50 mm) beside the sample ---
+/detector/add hpge 30 50 0 80 0
 
-# --- Output ---
-/output/file data/hits.parquet
+# --- Output: base path; each detector writes to results/<name>/gamma_hits-* ---
+/output/file data/results/gamma_hits.parquet
 
-# --- Build the geometry and fire neutrons ---
+# --- Build the geometry ---
 /run/initialize
+
+# --- Source: 14.1 MeV (DT generator) neutrons, a point 50 mm before the sample ---
+/source/particle neutron
+/source/shape point
+/source/position 0 0 -50
+/source/energyType mono
+/source/energy 14.1
+/source/timing continuous
+
+# --- Fire neutrons ---
 /run/printProgress 1000
 /run/beamOn 10000

@@ -1,6 +1,8 @@
 #ifndef GRAACE_CONFIG_HH
 #define GRAACE_CONFIG_HH
 
+#include "utils.hh"
+
 #include "G4ThreeVector.hh"
 #include "G4String.hh"
 
@@ -23,8 +25,20 @@ public:
 
   // --- Source (/source/*) ---
   G4String     source_particle = "neutron";
-  G4double     source_energy   = 14.1;   // MeV (DT generator)
   G4ThreeVector source_position{0., 0., -50.};  // mm, relative to sample center
+  // Emission shape: point | disk | beam. A disk or beam uses source_radius.
+  G4String     source_shape  = "point";
+  G4double     source_radius = 0.;       // mm (disk / beam radius)
+  // Energy: mono uses source_energy (MeV); spectrum reads source_spectrum_file,
+  // a plain-text "energy_mev intensity" list, one pair per line.
+  G4String     source_energy_type   = "mono";
+  G4double     source_energy         = 14.1;  // MeV (DT generator)
+  G4String     source_spectrum_file  = "";
+  // Time structure: continuous | single | periodic. A single or periodic source
+  // uses source_pulse_width_ns; periodic also uses source_pulse_period_ns.
+  G4String     source_timing          = "continuous";
+  G4double     source_pulse_width_ns  = 0.;
+  G4double     source_pulse_period_ns = 0.;
 
   // --- Sample (/sample/*) ---
   // Composition as (element symbol, mass fraction) pairs; fractions sum to 1.
@@ -35,10 +49,14 @@ public:
   G4double     sample_height  = 20.;     // mm (cylinder height)
   G4ThreeVector sample_position{0., 0., 0.};  // mm
 
-  // --- Detector (/detector/*) ---
-  G4double     detector_radius = 30.;    // mm (HPGe crystal radius)
-  G4double     detector_height = 50.;    // mm (HPGe crystal length)
-  G4ThreeVector detector_position{0., 80., 0.};  // mm
+  // --- Detectors (/detector/*) ---
+  // One HPGe cylinder per entry. Defaults to the single example detector; each
+  // /detector/add command replaces this default set with the added detectors.
+  std::vector<DetectorBlock> detectors{{"detector", 30., 50., {0., 80., 0.}}};
+
+  // --- Shielding (/shielding/*) ---
+  // Zero or more shielding slabs; empty by default.
+  std::vector<ShieldingBlock> shielding;
 
   // --- Output (/output/*) ---
   G4String     output_file = "data/hits.parquet";

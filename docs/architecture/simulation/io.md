@@ -8,8 +8,10 @@ which spectra, sensitivity, and minimum-flux estimates are built.
 
 ## What is recorded
 
-<!-- Outline: the recorded quantities per gamma hit (e.g. detector, energy,
-time), and any other tables. Define the columns and their units. -->
+<!-- Outline: the recorded quantities per gamma hit (energy in keV, time in ns),
+and any other tables. Define the columns and their units. The detector is not a
+column: each detector's hits are written to its own subdirectory, so the
+directory name identifies the detector. -->
 
 ## File format
 
