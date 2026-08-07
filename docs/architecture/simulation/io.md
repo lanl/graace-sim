@@ -29,6 +29,16 @@ not pin it here.) -->
 <!-- Outline: how the writer is opened per run, appended to as events are
 processed, and closed; threading considerations if multithreaded. -->
 
+The engine runs multithreaded, so several worker threads record hits at once. The
+writer (`SimIO`) is thread-local: each worker owns its own buffers and writes its
+own Parquet part files, so nothing is shared and the hit path needs no locking.
+Each worker's part files carry a `w<thread>` tag in the name
+(`gamma_hits-part-w000-00000.parquet`) so two workers never target the same file.
+The master thread scores no hits — it only opens the run and prints the final
+summary. Because a detector's whole set of part files is read back as one table,
+the number of worker threads is transparent to the reader; row order across
+threads is not fixed, but the set of hits is complete.
+
 ## Reading the output
 
 <!-- Outline: how the Python side reads Parquet back for analysis; the columns
