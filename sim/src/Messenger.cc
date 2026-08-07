@@ -131,6 +131,21 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
                 "symbol mass_number atom_fraction" << G4endl;
       return;
     }
+    if (mass_number <= 0 || atom_fraction <= 0. || atom_fraction > 1.) {
+      G4cerr << "Messenger: invalid /sample/isotope values; expected mass_number > 0 and 0 < atom_fraction <= 1; got mass_number="
+             << mass_number << ", atom_fraction=" << atom_fraction << G4endl;
+      return;
+    }
+    auto it = config.sample_isotopes.find(symbol);
+    if (it != config.sample_isotopes.end()) {
+      for (const auto& existing : it->second) {
+        if (existing.mass_number == mass_number) {
+          G4cerr << "Messenger: duplicate isotope mass number " << mass_number
+                 << " for element '" << symbol << "'" << G4endl;
+          return;
+        }
+      }
+    }
     config.sample_isotopes[symbol].push_back({mass_number, atom_fraction});
   } else if (command == fSampleDensity.get()) {
     config.sample_density = std::stod(value);
