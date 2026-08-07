@@ -1,6 +1,6 @@
 """The top-level configuration and run record: one experiment as a whole."""
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from models.base import StrictModel
 from models.detector import Detector
@@ -28,3 +28,13 @@ class Simulation(StrictModel):
     run: RunSettings
     metadata: Metadata
     environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
+
+    @model_validator(mode="after")
+    def unique_detector_names(self) -> "Simulation":
+        """Each detector name becomes a directory and a detector volume, so two
+        detectors sharing a name would collide. Require the names to be unique."""
+        names = [detector.name for detector in self.detectors]
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"detector names must be unique; repeated: {duplicates}")
+        return self
