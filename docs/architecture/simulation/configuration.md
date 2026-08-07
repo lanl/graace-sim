@@ -24,12 +24,16 @@ module built in [geometry.md](geometry.md):
 - `/sample/*` — the assayed material (composition, density, shape, position).
 - `/detector/*` — the gamma detectors, one per `/detector/add` line.
 - `/shielding/*` — shielding blocks, one per `/shielding/add` line.
-- `/output/*` — what to record and where to write it.
+- `/output/*` — what to record and where to write it. The base path names a
+  file such as `results/gamma_hits.parquet`; the engine writes each detector's
+  hits into its own subdirectory,
+  `results/<detector_name>/gamma_hits-part-NNNNN.parquet`.
 
 The full command list, with argument formats, is in the command interface — see
 [messenger.md](messenger.md). Two groups take **one line per item** so a run can
-hold several: `/detector/add radius_mm height_mm x y z` and
-`/shielding/add material thickness_mm x y z`.
+hold several: `/detector/add name radius_mm height_mm x y z` and
+`/shielding/add material thickness_mm x y z`. A detector's name labels both its
+volume and its output subdirectory.
 
 The commands themselves are defined by the command interface — see
 [messenger.md](messenger.md).
