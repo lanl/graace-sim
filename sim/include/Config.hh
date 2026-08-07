@@ -13,8 +13,10 @@
 // Config holds every value the engine reads back when it builds the world and
 // runs. The Messenger writes into it from the macro commands; the geometry
 // builder and actions read from it. It holds no physics, only configuration
-// state. Defaults here are the DT-generator -> sample -> detector test case, so
-// the engine runs sensibly even with a bare macro.
+// state. Defaults here are the DT-generator neutron source and a single
+// detector, so the engine runs sensibly even with a bare macro. The sample is
+// optional: its composition is empty by default and a sample volume is built
+// only when a /sample/composition command fills it in.
 //
 // Field names match the snake_case names used in the macro commands and in the
 // Python Pydantic models.
@@ -43,7 +45,9 @@ public:
 
   // --- Sample (/sample/*) ---
   // Composition as (element symbol, mass fraction) pairs; fractions sum to 1.
-  std::vector<std::pair<G4String, G4double>> sample_composition{{"Fe", 1.0}};
+  // Empty means no sample: the geometry builder skips the sample volume when a
+  // macro sends no /sample/composition command.
+  std::vector<std::pair<G4String, G4double>> sample_composition;
   // Optional isotope breakdown per element symbol. A symbol absent here uses
   // natural isotopic abundances; present, the element is built from these
   // isotopes by atom fraction.

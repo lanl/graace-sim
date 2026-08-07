@@ -29,7 +29,12 @@ target_link_libraries(graace-sim
 )
 
 # Put the executable at the top of the build directory so `build/graace-sim`
-# is the path the pixi task runs.
+# is a predictable path during development.
 set_target_properties(graace-sim PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+# Install the engine into <prefix>/bin so it lands on PATH. `build-sim` sets the
+# prefix to the active pixi environment, so the runner finds it with
+# `shutil.which("graace-sim")`.
+install(TARGETS graace-sim RUNTIME DESTINATION bin)

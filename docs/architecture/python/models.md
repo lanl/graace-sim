@@ -59,7 +59,8 @@ class Size3Mm(StrictModel):
 `Simulation` is a flat composition of the parts of an experiment. Required parts
 have no default; optional parts are `X | None = None`. `source`, `detectors`,
 `run`, and `metadata` are required. `sample` is optional (a setup may have no
-sample), and `shielding` defaults to an empty list.
+sample), and `shielding` defaults to an empty list. `environment` and `runner`
+both default, so an existing config with neither block stays valid.
 
 ```python
 class Simulation(StrictModel):
@@ -72,6 +73,7 @@ class Simulation(StrictModel):
     run: RunSettings
     metadata: Metadata
     environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
+    runner: SimRunner = Field(default_factory=SimRunner)
 ```
 
 Each part is defined in its own file under `src/models/` and imported here.
@@ -291,6 +293,25 @@ class RunSettings(StrictModel):
     neutrons: int = Field(gt=0)
     seed: int = Field(default=0, ge=0)
 ```
+
+### SimRunner (`runner.py`)
+
+How to *launch* the engine, kept separate from `RunSettings` (`run`), which is
+the *physics* of the run. `SimRunner` carries the binary name and the launch
+options the runner acts on: whether to draw a progress bar, and whether to
+verify each detector produced results. The binary defaults to `graace-sim` and
+is resolved on PATH, so a config never records where the build lives.
+
+```python
+class SimRunner(StrictModel):
+    binary: str = Field(default="graace-sim", min_length=1)
+    show_progress: bool = Field(default=True)
+    verify_output: bool = Field(default=True)
+```
+
+`run:` (physics) and `runner:` (launch) read closely; keeping them apart means a
+config can change the neutron count without touching how the engine is invoked,
+and neither block is required — both default.
 
 ### Metadata (`metadata.py`)
 

@@ -5,3 +5,9 @@
 # Python
 __pycache__/
 *.py[cod]
+
+# Keep the build directory clean
+build/*
+
+# Keep the data directory clean
+data/*

@@ -7,6 +7,7 @@ from models.detector import Detector
 from models.metadata import Metadata
 from models.environment import WorkingEnvironment
 from models.run import RunSettings
+from models.runner import SimRunner
 from models.sample import Sample
 from models.shielding import Shielding
 from models.source import Source
@@ -17,8 +18,9 @@ class Simulation(StrictModel):
 
     A flat composition of the parts of one experiment. ``source``,
     ``detectors``, ``run``, and ``metadata`` are required. ``sample`` is optional
-    (a setup may have no sample), ``shielding`` defaults to an empty list, and
-    ``environment`` defaults to a run named ``example`` under ``data/``.
+    (a setup may have no sample), ``shielding`` defaults to an empty list,
+    ``environment`` defaults to a run named ``example`` under ``data/``, and
+    ``runner`` defaults to launching the ``graace-sim`` binary on PATH.
     """
 
     source: Source
@@ -28,6 +30,7 @@ class Simulation(StrictModel):
     run: RunSettings
     metadata: Metadata
     environment: WorkingEnvironment = Field(default_factory=WorkingEnvironment)
+    runner: SimRunner = Field(default_factory=SimRunner)
 
     @model_validator(mode="after")
     def unique_detector_names(self) -> "Simulation":

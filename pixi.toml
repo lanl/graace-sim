@@ -28,8 +28,8 @@ cmd = "pytest"
 env = { PYTHONPATH = "src" }
 
 [tasks.build-sim]
-description = "Configure and compile the GEANT4 engine into build/"
-cmd = "cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build"
+description = "Compile the GEANT4 engine and install graace-sim onto PATH"
+cmd = "cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DHDF5_ROOT=$CONDA_PREFIX && cmake --build build && cmake --install build"
 
 [tasks.clean-sim]
 description = "Remove the build directory"
@@ -38,8 +38,3 @@ cmd = "rm -rf build"
 [tasks.rebuild-sim]
 description = "Clean and compile the GEANT4 engine from scratch"
 depends-on = ["clean-sim", "build-sim"]
-
-[tasks.run-sim]
-description = "Run the graace-sim engine (pass a macro as an argument)"
-cmd = "build/graace-sim"
-depends-on = ["build-sim"]

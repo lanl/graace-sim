@@ -61,6 +61,19 @@ def test_isotope_commands_emitted(tmp_path):
     assert composition < lines.index(isotope_lines[0]) < initialize
 
 
+def test_no_sample_writes_no_sample_commands(tmp_path):
+    simulation = load_simulation(EXAMPLE)
+    simulation.sample = None
+    lines = _write(simulation, tmp_path)
+
+    # The sample is optional: with none set, no /sample/* command is written and
+    # the engine builds no sample volume. The rest of the run is unaffected.
+    assert not any(line.startswith("/sample/") for line in lines)
+    assert "/detector/add hpge 30 50 0 80 0" in lines
+    assert "/run/initialize" in lines
+    assert "/source/particle neutron" in lines
+
+
 def test_command_order(tmp_path):
     lines = _write(load_simulation(EXAMPLE), tmp_path)
     initialize = lines.index("/run/initialize")

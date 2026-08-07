@@ -22,7 +22,8 @@ module built in [geometry.md](geometry.md):
 
 - `/source/*` — the neutron source (particle, position, shape, energy, timing).
 - `/sample/*` — the assayed material (composition, density, shape, position, and
-  an optional per-element isotope breakdown via `/sample/isotope`).
+  an optional per-element isotope breakdown via `/sample/isotope`). The sample is
+  optional; with no `/sample/composition` command, no sample volume is built.
 - `/detector/*` — the gamma detectors, one per `/detector/add` line.
 - `/shielding/*` — shielding blocks, one per `/shielding/add` line.
 - `/output/*` — what to record and where to write it. The base path names a
