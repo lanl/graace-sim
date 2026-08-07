@@ -6,6 +6,7 @@
 #include "G4ThreeVector.hh"
 #include "G4String.hh"
 
+#include <map>
 #include <vector>
 #include <utility>
 
@@ -43,6 +44,10 @@ public:
   // --- Sample (/sample/*) ---
   // Composition as (element symbol, mass fraction) pairs; fractions sum to 1.
   std::vector<std::pair<G4String, G4double>> sample_composition{{"Fe", 1.0}};
+  // Optional isotope breakdown per element symbol. A symbol absent here uses
+  // natural isotopic abundances; present, the element is built from these
+  // isotopes by atom fraction.
+  std::map<G4String, std::vector<SampleIsotope>> sample_isotopes;
   G4double     sample_density = 7.87;    // g/cm3
   G4String     sample_shape   = "cylinder";  // cube | sphere | cylinder
   G4double     sample_size    = 10.;     // mm (cube side / sphere or cyl radius)
