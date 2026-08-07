@@ -58,7 +58,7 @@ Messenger::Messenger()
 
   fDetectorAdd = MakeCommand(
     "/detector/add",
-    "Add a detector: radius_mm height_mm x y z (mm). Replaces the default set.", this);
+    "Add a detector: name radius_mm height_mm x y z (mm). Replaces the default set.", this);
 
   fShieldingAdd = MakeCommand(
     "/shielding/add",
@@ -126,7 +126,7 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     config.sample_position = ParseVector(value);
 
   } else if (command == fDetectorAdd.get()) {
-    // radius_mm height_mm x y z. The first add replaces the default detector set.
+    // name radius_mm height_mm x y z. The first add replaces the default set.
     if (!fDetectorsCleared) {
       config.detectors.clear();
       fDetectorsCleared = true;
@@ -134,7 +134,7 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     std::istringstream in(value);
     DetectorBlock detector;
     double x = 0, y = 0, z = 0;
-    in >> detector.radius >> detector.height >> x >> y >> z;
+    in >> detector.name >> detector.radius >> detector.height >> x >> y >> z;
     detector.position = {x, y, z};
     config.detectors.push_back(detector);
 
