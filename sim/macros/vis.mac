@@ -11,9 +11,7 @@
 /sample/size 10
 /sample/height 20
 
-/detector/radius 30
-/detector/height 50
-/detector/position 0 80 0
+/detector/add hpge 30 50 0 80 0
 
 /run/initialize
 
