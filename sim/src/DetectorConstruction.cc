@@ -4,6 +4,8 @@
 
 #include "G4NistManager.hh"
 #include "G4Material.hh"
+#include "G4Element.hh"
+#include "G4Isotope.hh"
 #include "G4Box.hh"
 #include "G4Orb.hh"
 #include "G4Tubs.hh"
@@ -26,11 +28,30 @@ G4Material* DetectorConstruction::BuildSampleMaterial()
     "sample_material", config.sample_density * g / cm3,
     static_cast<G4int>(config.sample_composition.size()));
 
-  // Add each element by mass fraction. Elements come from the NIST database so
-  // natural isotopic abundances are used.
+  // Add each element by mass fraction. An element with no isotope breakdown comes
+  // from the NIST database, so natural isotopic abundances are used. An element
+  // with a breakdown is built from the specified isotopes by atom fraction.
   for (const auto& part : config.sample_composition) {
-    G4Element* element = nist->FindOrBuildElement(part.first);
-    material->AddElement(element, part.second);
+    const G4String& symbol = part.first;
+    const G4double mass_fraction = part.second;
+
+    auto found = config.sample_isotopes.find(symbol);
+    if (found == config.sample_isotopes.end()) {
+      G4Element* element = nist->FindOrBuildElement(symbol);
+      material->AddElement(element, mass_fraction);
+    } else {
+      const std::vector<SampleIsotope>& isotopes = found->second;
+      G4int Z = nist->FindOrBuildElement(symbol)->GetZasInt();
+      G4Element* element = new G4Element(
+        symbol + "_isotopic", symbol, static_cast<G4int>(isotopes.size()));
+      for (const auto& isotope : isotopes) {
+        // The isotope mass is taken from NIST data for the (Z, mass_number) pair.
+        G4Isotope* nuclide = new G4Isotope(
+          symbol + std::to_string(isotope.mass_number), Z, isotope.mass_number);
+        element->AddIsotope(nuclide, isotope.atom_fraction);
+      }
+      material->AddElement(element, mass_fraction);
+    }
   }
   return material;
 }
