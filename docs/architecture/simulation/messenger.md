@@ -25,6 +25,7 @@ Vectors are `x y z` in mm. The current commands:
 | `/source/pulseWidth` | ns (single/periodic) | `source_pulse_width_ns` |
 | `/source/pulsePeriod` | ns (periodic) | `source_pulse_period_ns` |
 | `/sample/composition` | `Sym frac Sym frac ...` | `sample_composition` |
+| `/sample/isotope` | `symbol mass_number atom_fraction` | one entry in `sample_isotopes` |
 | `/sample/density` | g/cm3 | `sample_density` |
 | `/sample/shape` | `cube \| sphere \| cylinder` | `sample_shape` |
 | `/sample/size` | mm | `sample_size` |
@@ -37,6 +38,12 @@ Vectors are `x y z` in mm. The current commands:
 `/detector/add` and `/shielding/add` append one item per line, so a run can hold
 several. The first `/detector/add` replaces the built-in default detector. A
 detector's name labels both its volume and its output subdirectory.
+
+`/sample/isotope` also appends one line per isotope, keyed by element symbol. It
+is optional: an element with no `/sample/isotope` line uses natural isotopic
+abundances. When lines are present for an element, that element is built from the
+listed isotopes by atom fraction (fraction by number of atoms), which must sum to
+1.0.
 
 `/output/file` sets the base Parquet path; each detector's hits are written into
 its own subdirectory, `results/<detector_name>/gamma_hits-part-NNNNN.parquet`.
