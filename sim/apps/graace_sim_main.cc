@@ -23,13 +23,17 @@ int main(int argc, char** argv)
     ui = new G4UIExecutive(argc, argv);
   }
 
+  // Create the run manager before initializing the physics list and geometry.
   auto* runManager =
-    G4RunManagerFactory::CreateRunManager(G4RunManagerType::Serial);
+    G4RunManagerFactory::CreateRunManager(G4RunManagerType::MT);
 
-  // High-precision neutron data so neutron capture and gamma production are
-  // modeled.
+  // High-precision neutron data so neutron capture and gamma production are modeled.
   runManager->SetUserInitialization(new FTFP_BERT_HP());
+
+  // Detector geometry and action initialization.
   runManager->SetUserInitialization(new DetectorConstruction());
+
+  // Action initialization must be set after the detector construction.
   runManager->SetUserInitialization(new ActionInitialization());
 
   // The command interface: /source, /sample, /detector, /output.
