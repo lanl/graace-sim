@@ -84,9 +84,9 @@ void PrimaryGeneratorAction::Configure()
 
 double PrimaryGeneratorAction::EventTime(int event_id)
 {
-  // Follows ScintiPix's per-vertex timing: place each event in a pulse and add
-  // a random offset within the pulse width. A "single" source is one pulse; a
-  // "periodic" source repeats every pulse_period.
+  // Per-vertex timing: place each event in a pulse and add a random offset
+  // within the pulse width. A "single" source is one pulse; a "periodic" source
+  // repeats every pulse_period.
   const Config& config = Config::Instance();
   const int safe_id = event_id < 0 ? 0 : event_id;
   const double width = config.source_pulse_width_ns * ns;

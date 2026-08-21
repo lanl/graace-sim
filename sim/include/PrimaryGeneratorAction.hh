@@ -25,7 +25,7 @@ private:
   void Configure();
 
   // The emission time for the given event, from the configured timing. Keyed on
-  // the event id (like ScintiPix) so the time is deterministic for each event.
+  // the event id so the time is deterministic for each event.
   double EventTime(int event_id);
 
   G4GeneralParticleSource* fSource;
