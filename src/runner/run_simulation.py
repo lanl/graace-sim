@@ -68,6 +68,14 @@ def run_simulation(config: Simulation) -> Path:
     macro_path = write_macro(config)
     command = _command(config, macro_path)
 
+    # Clear results from any previous run to this same directory. The engine
+    # writes one part file per worker thread and does not remove old ones, so a
+    # re-run with fewer threads would otherwise leave stale part files to be read
+    # alongside the new output.
+    results_directory = config.environment.results_directory
+    if results_directory.exists():
+        shutil.rmtree(results_directory)
+
     log_directory = config.environment.log_directory
     log_directory.mkdir(parents=True, exist_ok=True)
     log_file = log_directory / "run.log"

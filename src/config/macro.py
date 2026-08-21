@@ -159,11 +159,13 @@ def _macro_commands(simulation: Simulation) -> list[str]:
     commands.extend(_shielding_commands(simulation))
     commands.extend(_output_commands(simulation))
     commands.append("/run/initialize")
-    # Seed the random number generator so a run is reproducible: the same seed
-    # gives the same output. GEANT4's built-in command takes two seeds; using the
-    # one configured value for both is enough to fix the run. Under the
-    # multithreaded run manager GEANT4 derives each worker's seeds from this, so
-    # this is the single control for the whole run.
+    # Seed the random number generator. GEANT4's built-in command takes two
+    # seeds; using the one configured value for both fixes the streams, and under
+    # the multithreaded run manager GEANT4 derives each worker's seeds from it, so
+    # this is the single control for the whole run. A single-threaded run is then
+    # bit-for-bit reproducible. A multithreaded run is only statistically
+    # reproducible: events are handed to workers in a non-deterministic order, so
+    # the same seed gives equivalent but not identical output.
     commands.append(f"/random/setSeeds {simulation.run.seed} {simulation.run.seed}")
     commands.extend(_source_commands(simulation))
     commands.append(f"/run/beamOn {simulation.run.neutrons}")
