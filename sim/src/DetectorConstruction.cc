@@ -17,7 +17,31 @@
 #include "G4VisAttributes.hh"
 #include "G4ios.hh"
 
+#include <set>
 #include <string>
+#include <vector>
+
+namespace {
+// True when the isotope breakdown is usable: every isotope has mass_number > 0
+// and 0 < atom_fraction <= 1, mass numbers are unique, and the atom fractions
+// sum to 1.0. When false, the element falls back to natural abundances.
+bool IsValidIsotopeBreakdown(const std::vector<SampleIsotope>& isotopes)
+{
+  std::set<G4int> mass_numbers;
+  G4double total = 0.;
+  for (const auto& isotope : isotopes) {
+    if (isotope.mass_number <= 0 || isotope.atom_fraction <= 0. ||
+        isotope.atom_fraction > 1.) {
+      return false;
+    }
+    if (!mass_numbers.insert(isotope.mass_number).second) {
+      return false;  // duplicate mass number
+    }
+    total += isotope.atom_fraction;
+  }
+  return total > 1.0 - 1e-6 && total < 1.0 + 1e-6;
+}
+}  // namespace
 
 G4Material* DetectorConstruction::BuildSampleMaterial()
 {
@@ -49,27 +73,7 @@ G4Material* DetectorConstruction::BuildSampleMaterial()
         continue;
       }
 
-      // Validate that mass numbers are unique and atom fractions sum to 1.0.
-      G4double total = 0.;
-      bool invalid = false;
-      for (std::size_t i = 0; i < isotopes.size(); ++i) {
-        const auto& iso = isotopes[i];
-        if (iso.mass_number <= 0 || iso.atom_fraction <= 0. || iso.atom_fraction > 1.) {
-          invalid = true;
-          break;
-        }
-        total += iso.atom_fraction;
-        for (std::size_t j = i + 1; j < isotopes.size(); ++j) {
-          if (iso.mass_number == isotopes[j].mass_number) {
-            invalid = true;
-            break;
-          }
-        }
-        if (invalid) {
-          break;
-        }
-      }
-      if (invalid || total < 1.0 - 1e-6 || total > 1.0 + 1e-6) {
+      if (!IsValidIsotopeBreakdown(isotopes)) {
         G4cerr << "DetectorConstruction: invalid isotope breakdown for element '" << symbol
                << "' (unique mass numbers and atom fractions summing to 1.0 are required); using natural abundances." << G4endl;
         G4Element* element = nist->FindOrBuildElement(symbol);
@@ -94,7 +98,6 @@ G4Material* DetectorConstruction::BuildSampleMaterial()
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {
-  const Config& config = Config::Instance();
   G4NistManager* nist = G4NistManager::Instance();
 
   // --- World: a box of air, large enough to hold the sample and detector ---
@@ -106,37 +109,53 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4VPhysicalVolume* worldPV = new G4PVPlacement(
     nullptr, {}, worldLV, "world", nullptr, false, 0, true);
 
-  // --- Sample: a simple shape of the configured material ---
-  // The sample is optional. An empty composition (no /sample/composition
-  // command in the macro) means no sample, so the sample volume is skipped and
-  // the world holds only the source, detectors, and any shielding.
-  if (!config.sample_composition.empty()) {
-    G4Material* sampleMat = BuildSampleMaterial();
-    G4VSolid* sampleSolid = nullptr;
-    if (config.sample_shape == "cube") {
-      G4double half = 0.5 * config.sample_size * mm;
-      sampleSolid = new G4Box("sample", half, half, half);
-    } else if (config.sample_shape == "sphere") {
-      sampleSolid = new G4Orb("sample", config.sample_size * mm);
-    } else if (config.sample_shape == "cylinder") {
-      sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
-                               0.5 * config.sample_height * mm, 0., twopi);
-    } else {
-      G4cerr << "DetectorConstruction: unknown sample shape '" << config.sample_shape
-             << "'; expected cube|sphere|cylinder. Using cylinder." << G4endl;
-      sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
-                               0.5 * config.sample_height * mm, 0., twopi);
-    }
-    G4LogicalVolume* sampleLV = new G4LogicalVolume(sampleSolid, sampleMat, "sample");
-    sampleLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.3, 0.6, 1.0)));
-    new G4PVPlacement(nullptr, config.sample_position * mm, sampleLV, "sample",
-                      worldLV, false, 0, true);
+  BuildSample(worldLV);
+  BuildShielding(worldLV);
+  BuildDetectors(worldLV);
+
+  return worldPV;
+}
+
+void DetectorConstruction::BuildSample(G4LogicalVolume* worldLV)
+{
+  // The sample is optional. An empty composition (no /sample/composition command
+  // in the macro) means no sample, so the world holds only the source,
+  // detectors, and any shielding.
+  const Config& config = Config::Instance();
+  if (config.sample_composition.empty()) {
+    return;
   }
 
-  // --- Shielding: optional slabs of a named material ---
-  // Each slab is a square footprint kSlabHalfWidth on a side, the configured
-  // thickness deep (along z). A fixed footprint keeps the command to material,
-  // thickness, and position; a configurable footprint can be added later.
+  G4Material* sampleMat = BuildSampleMaterial();
+  G4VSolid* sampleSolid = nullptr;
+  if (config.sample_shape == "cube") {
+    G4double half = 0.5 * config.sample_size * mm;
+    sampleSolid = new G4Box("sample", half, half, half);
+  } else if (config.sample_shape == "sphere") {
+    sampleSolid = new G4Orb("sample", config.sample_size * mm);
+  } else if (config.sample_shape == "cylinder") {
+    sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
+                             0.5 * config.sample_height * mm, 0., twopi);
+  } else {
+    G4cerr << "DetectorConstruction: unknown sample shape '" << config.sample_shape
+           << "'; expected cube|sphere|cylinder. Using cylinder." << G4endl;
+    sampleSolid = new G4Tubs("sample", 0., config.sample_size * mm,
+                             0.5 * config.sample_height * mm, 0., twopi);
+  }
+  G4LogicalVolume* sampleLV = new G4LogicalVolume(sampleSolid, sampleMat, "sample");
+  sampleLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.3, 0.6, 1.0)));
+  new G4PVPlacement(nullptr, config.sample_position * mm, sampleLV, "sample",
+                    worldLV, false, 0, true);
+}
+
+void DetectorConstruction::BuildShielding(G4LogicalVolume* worldLV)
+{
+  // Optional slabs of a named material. Each slab is a square footprint
+  // kSlabHalfWidth on a side, the configured thickness deep (along z). A fixed
+  // footprint keeps the command to material, thickness, and position; a
+  // configurable footprint can be added later.
+  const Config& config = Config::Instance();
+  G4NistManager* nist = G4NistManager::Instance();
   for (std::size_t i = 0; i < config.shielding.size(); ++i) {
     const ShieldingBlock& block = config.shielding[i];
     G4Material* shieldMat = nist->FindOrBuildMaterial(block.material);
@@ -156,10 +175,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                       shieldName, worldLV, false,
                       static_cast<G4int>(i), true);
   }
+}
 
-  // --- Detectors: one or more HPGe (germanium) cylinders, made sensitive below.
-  // Each takes its configured name so its hits are recorded under that name.
-  G4Material* germanium = nist->FindOrBuildMaterial("G4_Ge");
+void DetectorConstruction::BuildDetectors(G4LogicalVolume* worldLV)
+{
+  // One or more HPGe (germanium) cylinders, made sensitive in
+  // ConstructSDandField. Each takes its configured name so its hits are recorded
+  // under that name.
+  const Config& config = Config::Instance();
+  G4Material* germanium = G4NistManager::Instance()->FindOrBuildMaterial("G4_Ge");
   for (std::size_t i = 0; i < config.detectors.size(); ++i) {
     const DetectorBlock& detector = config.detectors[i];
     const G4String& name = detector.name;
@@ -170,8 +194,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     new G4PVPlacement(nullptr, detector.position * mm, detLV, name,
                       worldLV, false, static_cast<G4int>(i), true);
   }
-
-  return worldPV;
 }
 
 void DetectorConstruction::ConstructSDandField()
