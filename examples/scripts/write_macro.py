@@ -7,21 +7,25 @@ single-detector example):
     pixi run python examples/scripts/write_macro.py examples/yaml_files/two_detectors.yaml
 """
 
-import sys
+import argparse
 from pathlib import Path
-
-# The package lives under src/, which is not installed, so add it to the path.
-ROOT = Path(__file__).parents[2]
-sys.path.insert(0, str(ROOT / "src"))
 
 from config.macro import write_macro
 from config.yaml_io import load_simulation
 
-# The config path is the first argument; fall back to the example config.
-default_config = ROOT / "examples" / "yaml_files" / "example.yaml"
-config_path = Path(sys.argv[1]) if len(sys.argv) > 1 else default_config
+default_config = Path(__file__).parents[2] / "examples" / "yaml_files" / "example.yaml"
 
-simulation = load_simulation(config_path)
+parser = argparse.ArgumentParser(description="Load a YAML config and write its GEANT4 macro.")
+parser.add_argument(
+    "config",
+    type=Path,
+    nargs="?",
+    default=default_config,
+    help="Path to the simulation config YAML file (defaults to the single-detector example).",
+)
+args = parser.parse_args()
+
+simulation = load_simulation(args.config)
 macro_path = write_macro(simulation)
 
 print(f"wrote macro: {macro_path}")

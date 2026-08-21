@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pydantic import Field, field_validator
 
-from models.base import StrictModel
+from models.base import StrictModel, check_directory_safe_name
 
 
 class WorkingEnvironment(StrictModel):
@@ -33,11 +33,7 @@ class WorkingEnvironment(StrictModel):
     @classmethod
     def safe_run_id(cls, run_id: str) -> str:
         """The run id names a directory, so reject path separators and `.`/`..`."""
-        if "/" in run_id or "\\" in run_id:
-            raise ValueError("`run_id` must not contain a path separator.")
-        if run_id in {".", ".."}:
-            raise ValueError("`run_id` must not be '.' or '..'.")
-        return run_id
+        return check_directory_safe_name(run_id, "run_id")
 
     @property
     def run_directory(self) -> Path:

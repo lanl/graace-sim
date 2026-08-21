@@ -2,7 +2,7 @@
 
 from pydantic import Field, field_validator
 
-from models.base import StrictModel
+from models.base import StrictModel, check_directory_safe_name
 from models.vectors import Size3Mm, Vec3Mm
 
 
@@ -20,8 +20,4 @@ class Detector(StrictModel):
     def safe_name(cls, name: str) -> str:
         """The name labels the detector's output directory, so reject path
         separators and `.`/`..`."""
-        if "/" in name or "\\" in name:
-            raise ValueError("`name` must not contain a path separator.")
-        if name in {".", ".."}:
-            raise ValueError("`name` must not be '.' or '..'.")
-        return name
+        return check_directory_safe_name(name, "name")
