@@ -22,10 +22,15 @@ pyyaml = "*"
 loguru = "*"
 pytest = "*"
 
+# Put the source directory on the import path for everything run in the
+# environment (the test suite and the example scripts), so nothing has to adjust
+# `sys.path` by hand.
+[activation]
+env = { PYTHONPATH = "src" }
+
 [tasks.test]
 description = "Run the Python test suite"
 cmd = "pytest"
-env = { PYTHONPATH = "src" }
 
 [tasks.build-sim]
 description = "Compile the GEANT4 engine and install graace-sim onto PATH"

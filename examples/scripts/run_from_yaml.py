@@ -8,14 +8,10 @@ engine on PATH. Writes the macro, runs the engine, and lands the macro,
 """
 
 import argparse
-import sys
 from pathlib import Path
 
-# The package lives under src/, which is not installed, so add it to the path.
-sys.path.append(str(Path(__file__).resolve().parents[2] / "src"))
-
-from config.yaml_io import load_simulation  # noqa: E402
-from runner.run_simulation import run_simulation  # noqa: E402
+from config.yaml_io import load_simulation
+from runner.run_simulation import run_simulation
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load a simulation config and run it.")

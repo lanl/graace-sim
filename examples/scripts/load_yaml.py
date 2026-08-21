@@ -5,15 +5,11 @@ Run it with pixi:
     pixi run python examples/scripts/load_yaml.py
 """
 
-import sys
 from pathlib import Path
-
-# The package lives under src/, which is not installed, so add it to the path.
-ROOT = Path(__file__).parents[2]
-sys.path.insert(0, str(ROOT / "src"))
 
 from config.yaml_io import load_simulation
 
+ROOT = Path(__file__).parents[2]
 simulation = load_simulation(ROOT / "examples" / "yaml_files" / "example.yaml")
 
 print(f"source:         {simulation.source.energy.mono_mev} MeV {simulation.source.particle}")
