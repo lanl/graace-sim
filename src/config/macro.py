@@ -18,6 +18,7 @@ from pathlib import Path
 from loguru import logger
 
 from models.simulation import Simulation
+from models.vectors import Vec3Mm
 
 
 def _format(value: float) -> str:
@@ -38,9 +39,9 @@ def _thread_count(cpu_percent: int) -> int:
     return max(1, cores * cpu_percent // 100)
 
 
-def _vector(x_mm: float, y_mm: float, z_mm: float) -> str:
+def _vector(position: Vec3Mm) -> str:
     """Format a position as ``x y z`` for a ``/.../position`` command."""
-    return f"{_format(x_mm)} {_format(y_mm)} {_format(z_mm)}"
+    return f"{_format(position.x_mm)} {_format(position.y_mm)} {_format(position.z_mm)}"
 
 
 def _sample_commands(simulation: Simulation) -> list[str]:
@@ -53,7 +54,6 @@ def _sample_commands(simulation: Simulation) -> list[str]:
         f"{element.symbol} {_format(element.mass_fraction)}"
         for element in sample.composition.elements
     )
-    position = sample.position_mm
     commands = [f"/sample/composition {composition}"]
     # An isotope breakdown is optional per element; without one the engine uses
     # natural abundances and no /sample/isotope line is written.
@@ -72,9 +72,7 @@ def _sample_commands(simulation: Simulation) -> list[str]:
     ]
     if sample.shape == "cylinder":
         commands.append(f"/sample/height {_format(sample.height_mm)}")
-    commands.append(
-        f"/sample/position {_vector(position.x_mm, position.y_mm, position.z_mm)}"
-    )
+    commands.append(f"/sample/position {_vector(sample.position_mm)}")
     return commands
 
 
@@ -90,12 +88,11 @@ def _detector_commands(simulation: Simulation) -> list[str]:
     commands = []
     for detector in simulation.detectors:
         dimension = detector.dimension_mm
-        position = detector.position_mm
         radius = _format(dimension.x_mm / 2)
         height = _format(dimension.z_mm)
         commands.append(
             f"/detector/add {detector.name} {radius} {height} "
-            f"{_vector(position.x_mm, position.y_mm, position.z_mm)}"
+            f"{_vector(detector.position_mm)}"
         )
     return commands
 
@@ -104,10 +101,9 @@ def _shielding_commands(simulation: Simulation) -> list[str]:
     """One ``/shielding/add`` per shielding block."""
     commands = []
     for block in simulation.shielding:
-        position = block.position_mm
         commands.append(
             f"/shielding/add {block.material} {_format(block.thickness_mm)} "
-            f"{_vector(position.x_mm, position.y_mm, position.z_mm)}"
+            f"{_vector(block.position_mm)}"
         )
     return commands
 
@@ -130,10 +126,9 @@ def _source_commands(simulation: Simulation) -> list[str]:
     energy = source.energy
     timing = source.timing
 
-    center = position.center_mm
     commands = [
         f"/source/particle {source.particle}",
-        f"/source/position {_vector(center.x_mm, center.y_mm, center.z_mm)}",
+        f"/source/position {_vector(position.center_mm)}",
         f"/source/shape {position.shape}",
     ]
     if position.radius_mm is not None:
