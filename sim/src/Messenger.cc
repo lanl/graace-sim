@@ -82,6 +82,108 @@ G4ThreeVector ParseVector(const G4String& value)
   in >> x >> y >> z;
   return {x, y, z};
 }
+
+// /sample/composition: alternating element symbol and mass fraction. A new
+// composition owns its isotope breakdown, so clear any isotopes carried over
+// from an earlier composition in the same process (interactive session or a
+// re-run macro). Otherwise an element could not revert to natural abundances by
+// simply omitting its /sample/isotope lines. Any /sample/isotope lines meant for
+// this composition must therefore follow it.
+void ParseComposition(const G4String& value, Config& config)
+{
+  std::istringstream in(value);
+  std::vector<std::pair<G4String, G4double>> composition;
+  G4String symbol;
+  double fraction;
+  while (in >> symbol >> fraction) {
+    composition.emplace_back(symbol, fraction);
+  }
+  config.sample_composition = composition;
+  config.sample_isotopes.clear();
+}
+
+// /sample/isotope: symbol mass_number atom_fraction. Appended one line per
+// isotope, keyed by element symbol; a symbol with no line uses natural
+// abundances. Isotope lines must come after their /sample/composition line,
+// which clears any previously set isotopes.
+void ParseIsotope(const G4String& value, Config& config)
+{
+  std::istringstream in(value);
+  G4String symbol;
+  int mass_number = 0;
+  double atom_fraction = 0.;
+  if (!(in >> symbol >> mass_number >> atom_fraction)) {
+    G4cerr << "Messenger: invalid /sample/isotope args; expected: "
+              "symbol mass_number atom_fraction" << G4endl;
+    return;
+  }
+  if (mass_number <= 0 || atom_fraction <= 0. || atom_fraction > 1.) {
+    G4cerr << "Messenger: invalid /sample/isotope values; expected mass_number > 0 and 0 < atom_fraction <= 1; got mass_number="
+           << mass_number << ", atom_fraction=" << atom_fraction << G4endl;
+    return;
+  }
+  auto it = config.sample_isotopes.find(symbol);
+  if (it != config.sample_isotopes.end()) {
+    for (const auto& existing : it->second) {
+      if (existing.mass_number == mass_number) {
+        G4cerr << "Messenger: duplicate isotope mass number " << mass_number
+               << " for element '" << symbol << "'" << G4endl;
+        return;
+      }
+    }
+  }
+  config.sample_isotopes[symbol].push_back({mass_number, atom_fraction});
+}
+
+// /detector/add: name radius_mm height_mm x y z. Parses, validates, and appends
+// one detector. The caller clears the default set before the first add.
+void ParseDetector(const G4String& value, Config& config)
+{
+  std::istringstream in(value);
+  DetectorBlock detector;
+  double x = 0, y = 0, z = 0;
+  if (!(in >> detector.name >> detector.radius >> detector.height >> x >> y >> z)) {
+    G4cerr << "Messenger: invalid /detector/add args; expected: name radius_mm height_mm x y z" << G4endl;
+    return;
+  }
+  if (detector.name.empty() || detector.name == "." || detector.name == ".." ||
+      detector.name.find('/') != G4String::npos || detector.name.find('\\') != G4String::npos) {
+    G4cerr << "Messenger: unsafe detector name '" << detector.name << "'" << G4endl;
+    return;
+  }
+  if (detector.radius <= 0. || detector.height <= 0.) {
+    G4cerr << "Messenger: detector radius/height must be > 0 mm; got radius=" << detector.radius
+           << ", height=" << detector.height << G4endl;
+    return;
+  }
+  for (const auto& existing : config.detectors) {
+    if (existing.name == detector.name) {
+      G4cerr << "Messenger: duplicate detector name '" << detector.name << "'; names must be unique." << G4endl;
+      return;
+    }
+  }
+  detector.position = {x, y, z};
+  config.detectors.push_back(detector);
+}
+
+// /shielding/add: material thickness_mm x y z. Parses, validates, and appends
+// one shielding block.
+void ParseShielding(const G4String& value, Config& config)
+{
+  std::istringstream in(value);
+  ShieldingBlock block;
+  double x = 0, y = 0, z = 0;
+  if (!(in >> block.material >> block.thickness >> x >> y >> z)) {
+    G4cerr << "Messenger: invalid /shielding/add args; expected: material thickness_mm x y z" << G4endl;
+    return;
+  }
+  if (block.thickness <= 0.) {
+    G4cerr << "Messenger: shielding thickness must be > 0 mm; got " << block.thickness << G4endl;
+    return;
+  }
+  block.position = {x, y, z};
+  config.shielding.push_back(block);
+}
 }  // namespace
 
 void Messenger::SetNewValue(G4UIcommand* command, G4String value)
@@ -110,51 +212,9 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     config.source_pulse_period_ns = std::stod(value);
 
   } else if (command == fSampleComposition.get()) {
-    // Parse alternating element symbol and mass fraction.
-    std::istringstream in(value);
-    std::vector<std::pair<G4String, G4double>> composition;
-    G4String symbol;
-    double fraction;
-    while (in >> symbol >> fraction) {
-      composition.emplace_back(symbol, fraction);
-    }
-    config.sample_composition = composition;
-    // A new composition owns its isotope breakdown, so drop any isotopes carried
-    // over from an earlier composition in the same process (interactive session
-    // or a re-run macro). Otherwise an element could not revert to natural
-    // abundances by simply omitting its /sample/isotope lines. Any /sample/isotope
-    // lines meant for this composition must therefore follow it.
-    config.sample_isotopes.clear();
+    ParseComposition(value, config);
   } else if (command == fSampleIsotope.get()) {
-    // symbol mass_number atom_fraction. Appended one line per isotope, keyed by
-    // element symbol; a symbol with no line uses natural abundances. Isotope
-    // lines must come after their /sample/composition line, which clears any
-    // previously set isotopes.
-    std::istringstream in(value);
-    G4String symbol;
-    int mass_number = 0;
-    double atom_fraction = 0.;
-    if (!(in >> symbol >> mass_number >> atom_fraction)) {
-      G4cerr << "Messenger: invalid /sample/isotope args; expected: "
-                "symbol mass_number atom_fraction" << G4endl;
-      return;
-    }
-    if (mass_number <= 0 || atom_fraction <= 0. || atom_fraction > 1.) {
-      G4cerr << "Messenger: invalid /sample/isotope values; expected mass_number > 0 and 0 < atom_fraction <= 1; got mass_number="
-             << mass_number << ", atom_fraction=" << atom_fraction << G4endl;
-      return;
-    }
-    auto it = config.sample_isotopes.find(symbol);
-    if (it != config.sample_isotopes.end()) {
-      for (const auto& existing : it->second) {
-        if (existing.mass_number == mass_number) {
-          G4cerr << "Messenger: duplicate isotope mass number " << mass_number
-                 << " for element '" << symbol << "'" << G4endl;
-          return;
-        }
-      }
-    }
-    config.sample_isotopes[symbol].push_back({mass_number, atom_fraction});
+    ParseIsotope(value, config);
   } else if (command == fSampleDensity.get()) {
     config.sample_density = std::stod(value);
   } else if (command == fSampleShape.get()) {
@@ -167,52 +227,15 @@ void Messenger::SetNewValue(G4UIcommand* command, G4String value)
     config.sample_position = ParseVector(value);
 
   } else if (command == fDetectorAdd.get()) {
-    // name radius_mm height_mm x y z. The first add replaces the default set.
+    // The first /detector/add replaces the default detector set.
     if (!fDetectorsCleared) {
       config.detectors.clear();
       fDetectorsCleared = true;
     }
-    std::istringstream in(value);
-    DetectorBlock detector;
-    double x = 0, y = 0, z = 0;
-    if (!(in >> detector.name >> detector.radius >> detector.height >> x >> y >> z)) {
-      G4cerr << "Messenger: invalid /detector/add args; expected: name radius_mm height_mm x y z" << G4endl;
-      return;
-    }
-    if (detector.name.empty() || detector.name == "." || detector.name == ".." ||
-        detector.name.find('/') != G4String::npos || detector.name.find('\\') != G4String::npos) {
-      G4cerr << "Messenger: unsafe detector name '" << detector.name << "'" << G4endl;
-      return;
-    }
-    if (detector.radius <= 0. || detector.height <= 0.) {
-      G4cerr << "Messenger: detector radius/height must be > 0 mm; got radius=" << detector.radius
-             << ", height=" << detector.height << G4endl;
-      return;
-    }
-    for (const auto& existing : config.detectors) {
-      if (existing.name == detector.name) {
-        G4cerr << "Messenger: duplicate detector name '" << detector.name << "'; names must be unique." << G4endl;
-        return;
-      }
-    }
-    detector.position = {x, y, z};
-    config.detectors.push_back(detector);
+    ParseDetector(value, config);
 
   } else if (command == fShieldingAdd.get()) {
-    // material thickness_mm x y z.
-    std::istringstream in(value);
-    ShieldingBlock block;
-    double x = 0, y = 0, z = 0;
-    if (!(in >> block.material >> block.thickness >> x >> y >> z)) {
-      G4cerr << "Messenger: invalid /shielding/add args; expected: material thickness_mm x y z" << G4endl;
-      return;
-    }
-    if (block.thickness <= 0.) {
-      G4cerr << "Messenger: shielding thickness must be > 0 mm; got " << block.thickness << G4endl;
-      return;
-    }
-    block.position = {x, y, z};
-    config.shielding.push_back(block);
+    ParseShielding(value, config);
 
   } else if (command == fOutputFile.get()) {
     config.output_file = value;
