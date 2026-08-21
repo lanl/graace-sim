@@ -7,13 +7,13 @@
 #include "DetectorConstruction.hh"
 #include "ActionInitialization.hh"
 #include "Messenger.hh"
-#include "seed.hh"
 
 #include "G4RunManagerFactory.hh"
 #include "G4UImanager.hh"
 #include "G4UIExecutive.hh"
 #include "G4VisExecutive.hh"
 #include "FTFP_BERT_HP.hh"
+#include "Randomize.hh"
 
 int main(int argc, char** argv)
 {
@@ -39,7 +39,9 @@ int main(int argc, char** argv)
   // The command interface: /source, /sample, /detector, /output.
   Messenger messenger;
 
-  SetRandomSeed(1);
+  // A fixed default seed so a run is reproducible even if a macro sends no
+  // /random/setSeeds command; the generated macro overrides it.
+  CLHEP::HepRandom::setTheSeed(1);
 
   auto* visManager = new G4VisExecutive();
   visManager->Initialize();

@@ -153,7 +153,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       new G4LogicalVolume(shieldSolid, shieldMat, shieldName.c_str());
     shieldLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.6, 0.6, 0.6)));
     new G4PVPlacement(nullptr, block.position * mm, shieldLV,
-                      "shielding_" + std::to_string(i), worldLV, false,
+                      shieldName, worldLV, false,
                       static_cast<G4int>(i), true);
   }
 
