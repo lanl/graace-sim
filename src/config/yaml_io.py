@@ -1,8 +1,4 @@
-"""Read and write simulation configuration as YAML.
-
-For now this reads a YAML file and validates it as a ``Simulation``. Writing a
-``Simulation`` back out to YAML will live here too (a later pull request).
-"""
+"""Read a simulation configuration from YAML and validate it as a ``Simulation``."""
 
 from pathlib import Path
 

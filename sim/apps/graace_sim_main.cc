@@ -39,8 +39,10 @@ int main(int argc, char** argv)
   // The command interface: /source, /sample, /detector, /output.
   Messenger messenger;
 
-  // A fixed default seed so a run is reproducible even if a macro sends no
-  // /random/setSeeds command; the generated macro overrides it.
+  // A fixed default seed so a single-threaded run is reproducible even if a
+  // macro sends no /random/setSeeds command; the generated macro overrides it.
+  // A multithreaded run is only statistically reproducible: events are handed to
+  // workers in a non-deterministic order.
   CLHEP::HepRandom::setTheSeed(1);
 
   auto* visManager = new G4VisExecutive();

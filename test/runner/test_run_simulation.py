@@ -129,6 +129,28 @@ def test_verify_output_passes_when_results_present(tmp_path, monkeypatch):
     runner.run_simulation(config)
 
 
+def test_clears_stale_results_before_run(tmp_path, monkeypatch):
+    config = _config(tmp_path)
+    # A leftover part file from a previous run that used more worker threads.
+    detector = config.detectors[0].name
+    stale_dir = config.environment.results_directory / detector
+    stale_dir.mkdir(parents=True, exist_ok=True)
+    stale = stale_dir / "gamma_hits-part-w005-00000.parquet"
+    stale.write_bytes(b"old")
+
+    _install_engine(
+        monkeypatch, lambda: FakeProcess(["done\n"], on_wait=lambda: _write_results(config))
+    )
+
+    runner.run_simulation(config)
+
+    # The stale file is gone; only this run's fresh output remains.
+    assert not stale.exists()
+    assert list(stale_dir.glob("*.parquet")) == [
+        stale_dir / "gamma_hits-part-00000.parquet"
+    ]
+
+
 def test_show_progress_off_skips_progress_but_still_runs(tmp_path, monkeypatch):
     config = _config(tmp_path)
     config.runner.show_progress = False
