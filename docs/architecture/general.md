@@ -1,4 +1,4 @@
-## GRAACE-SIM Architecture
+# GRAACE-SIM Architecture
 
 This document provides the general architecture and design principles of 
 the GRAACE-SIM framework, including its core components, data flow, and 

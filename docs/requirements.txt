@@ -1,0 +1,13 @@
+# Documentation build dependencies (used by Read the Docs).
+# The GEANT4 engine is not needed to build the docs; only the Python control
+# layer is imported for the API reference, so its runtime imports are listed too.
+sphinx
+myst-parser
+furo
+sphinxcontrib-mermaid
+autodoc-pydantic
+
+# Imported by src/ when autodoc reads the API reference.
+pydantic>=2
+pyyaml
+loguru
