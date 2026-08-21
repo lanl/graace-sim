@@ -11,3 +11,6 @@ build/*
 
 # Keep the data directory clean
 data/*
+
+# Built documentation
+docs/_build/

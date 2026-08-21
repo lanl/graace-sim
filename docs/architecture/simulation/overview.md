@@ -13,7 +13,7 @@ part in detail:
 - [messenger.md](messenger.md) — the command interface that receives it.
 - [geometry.md](geometry.md) — how the source, sample, shielding, and detectors
   are built from the configured values.
-- [Actions.md](Actions.md) — what happens each run, event, and step.
+- [actions.md](actions.md) — what happens each run, event, and step.
 - [io.md](io.md) — what the engine records and how it writes output.
 
 ## Directory structure
@@ -59,7 +59,7 @@ sim/
 
 Each class maps to a page in this folder: `DetectorConstruction` and
 `SensitiveDetector` to [geometry.md](geometry.md); the actions to
-[Actions.md](Actions.md); `Messenger` and `Config` to [messenger.md](messenger.md);
+[actions.md](actions.md); `Messenger` and `Config` to [messenger.md](messenger.md);
 and `SimIO` to [io.md](io.md).
 
 ## Startup (`main`)
