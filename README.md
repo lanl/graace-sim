@@ -27,7 +27,7 @@ This installs the `graace-sim` binary into the pixi environment's `bin`, so `whi
 
 ## Running Examples
 
-Once the GRAACE-SIM environment is set up and the simulation is built, you can run the followingexamples:
+Once the GRAACE-SIM environment is set up and the simulation is built, you can run the following examples:
 1. Run via a yaml config file from the root directory:
 
    ```
@@ -44,7 +44,7 @@ Once the GRAACE-SIM environment is set up and the simulation is built, you can r
      logs/run.log                   the engine's streamed output
    ```
 
-2. Run the simulation to verfify geometries and run interactively:
+2. Run the simulation to verify geometries and run interactively:
 
    ```
    pixi run graace-sim

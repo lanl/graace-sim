@@ -1,0 +1,74 @@
+# Self-shielding comparison (2 of 2): DT generator, with a moderator, small sample.
+#
+# See dt_no_moderator_small_sample.yaml for what the pair is for and what to
+# compare it against. This run is the same as that one with a 50 mm slab of
+# polyethylene added between the generator and the sample, placed exactly where
+# dt_with_moderator.yaml puts it.
+#
+# This is the run where self-shielding is largest. The moderator slows the
+# neutrons down, and slow neutrons are absorbed by iron far more readily than
+# fast ones, so the outer layers of a full-size sample take most of them before
+# they reach the middle. Comparing this run against dt_with_moderator.yaml
+# therefore shows the neutron and the gamma part of self-shielding together,
+# where the run without the moderator shows very nearly the gamma part alone.
+
+# --- Source: 14.1 MeV (DT generator) neutrons, a pencil beam along +z ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -130}
+  energy:
+    type: mono
+    mono_mev: 14.1
+
+# --- Sample: an iron cylinder (radius 5 mm, height 8 mm) at the origin ---
+# One fifth the size of the full-size runs in every direction, so the shape is
+# unchanged and size is the only difference.
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 5       # cylinder radius
+  height_mm: 8     # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Moderator: 50 mm of polyethylene in the beam, ahead of the sample ---
+# Identical placement to dt_with_moderator.yaml: a 200 x 200 mm plate filling
+# z = -85 mm to -35 mm, clear of the sample and both detectors.
+shielding:
+  - material: G4_POLYETHYLENE
+    thickness_mm: 50
+    position_mm: {x_mm: 0, y_mm: 0, z_mm: -60}
+
+# --- Detectors: two HPGe crystals, one above and one below the sample ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+# The same count as every other run in the comparison, so the spectra can be read
+# against one another with no scaling.
+run:
+  neutrons: 10000000
+  seed: 1
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-09-09"
+  description: DT generator (14.1 MeV) on a small iron sample, behind 50 mm of polyethylene.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: dt_with_moderator_small_sample
+  sub_run: 0

@@ -1,0 +1,81 @@
+# Self-shielding comparison (3 of 4): DD generator, no moderator, small sample.
+#
+# See dt_no_moderator_small_sample.yaml for what these runs are for. Together
+# with that file, dt_with_moderator_small_sample.yaml and
+# dd_with_moderator_small_sample.yaml, this completes a small-sample copy of
+# every one of the four generator-comparison runs, so sample size becomes a
+# third axis alongside generator and moderator:
+#
+#                        no moderator                      with moderator
+#   DD, full size    dd_no_moderator.yaml              dd_with_moderator.yaml
+#   DD, small        dd_no_moderator_small_sample.yaml dd_with_moderator_small_sample.yaml
+#   DT, full size    dt_no_moderator.yaml              dt_with_moderator.yaml
+#   DT, small        dt_no_moderator_small_sample.yaml dt_with_moderator_small_sample.yaml
+#
+# This run is the same as dd_no_moderator.yaml with the iron sample scaled down
+# by a factor of five in every direction. Nothing else changes.
+#
+#   iron cylinder      radius  height   iron on the beam   escape path
+#   full size          25 mm   40 mm    40 mm              up to 25 mm
+#   this run            5 mm    8 mm     8 mm              up to  5 mm
+#
+# Without a moderator the neutrons arrive at 2.45 MeV, and iron's mean free path
+# for them is about 34 mm, longer than the whole full-size sample. So as in the
+# DT run without a moderator, nearly all the loss seen here is gammas being
+# absorbed on their way out of the iron rather than neutrons failing to reach
+# the middle of it.
+
+# --- Source: 2.45 MeV (DD generator) neutrons, a pencil beam along +z ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -130}
+  energy:
+    type: mono
+    mono_mev: 2.45
+
+# --- Sample: an iron cylinder (radius 5 mm, height 8 mm) at the origin ---
+# One fifth the size of the full-size runs in every direction, so the shape is
+# unchanged and size is the only difference.
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 5       # cylinder radius
+  height_mm: 8     # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Moderator: none in this run ---
+
+# --- Detectors: two HPGe crystals, one above and one below the sample ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+# The same count as every other run in the comparison, so the spectra can be read
+# against one another with no scaling.
+run:
+  neutrons: 10000000
+  seed: 1
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-09-09"
+  description: DD generator (2.45 MeV) on a small iron sample, no moderator.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: dd_no_moderator_small_sample
+  sub_run: 0

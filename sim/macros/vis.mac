@@ -29,5 +29,5 @@
 /vis/scene/add/trajectories smooth
 /vis/scene/endOfEventAction accumulate
 /vis/modeling/trajectories/create/drawByParticleID
-/vis/modeling/trajectories/drawByParticleID-0/set neutron green
-/vis/modeling/trajectories/drawByParticleID-0/set gamma red
+/vis/modeling/trajectories/drawByParticleID-0/set neutron red
+/vis/modeling/trajectories/drawByParticleID-0/setRGBA gamma 1 0.7 0.1 1

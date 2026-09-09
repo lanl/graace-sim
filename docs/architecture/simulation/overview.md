@@ -36,6 +36,7 @@ sim/
 │   ├── SteppingAction.hh             declares the class that records interactions as particles move
 │   ├── Messenger.hh                  declares the class that defines the /source, /sample, ... commands
 │   ├── Config.hh                     declares the class that holds the configured values the engine reads
+│   ├── GeometryPicture.hh            declares the function that writes the picture of the setup
 │   ├── SimIO.hh                      declares the class that writes the recorded data to Parquet
 │   ├── seed.hh                       declares the class that handles the random seed
 │   └── utils.hh                      declares small shared helpers
@@ -49,6 +50,7 @@ sim/
 │   ├── SteppingAction.cc             records interactions as particles move
 │   ├── Messenger.cc                  defines the /source, /sample, ... commands
 │   ├── Config.cc                     holds the configured values the engine reads
+│   ├── GeometryPicture.cc            writes the picture of the setup
 │   ├── SimIO.cc                      writes the recorded data to Parquet
 │   ├── seed.cc                       random seed handling
 │   └── utils.cc                      small shared helpers
@@ -89,6 +91,45 @@ gamma production; anything special for PGAA/NAA. -->
 
 <!-- Outline: macro in -> initialize -> beamOn N -> output written.
 A short numbered walk-through from macro to output file. -->
+
+## Picture of the setup
+
+Every run writes a picture of its own setup, `geometry.png`, in the same folder as
+its output file. There is nothing to switch on and nothing to tune.
+
+It is written at the start of the run, after every command in the macro has been
+applied and before the first neutron is fired, so a setup that is not what was
+intended shows up straight away rather than after a long run. No particles are
+fired to make it, so it cannot change a run's results.
+
+What is in it:
+
+| | |
+|---|---|
+| Blue shape | the sample |
+| Grey-green shapes | the detectors, each labelled with its configured name |
+| Translucent grey slabs | the shielding, labelled by material, see-through so the beam through them stays visible |
+| Red arrow | the neutrons: it starts at the source and ends on the face of the sample they arrive at |
+| Scale bar | a round number of centimetres, so sizes can be read off directly |
+
+The camera angle and the zoom are worked out from the size of the setup, not set
+by hand. The camera looks across the beam — never down it, which would hide
+everything behind the sample — tilted slightly so the parts read as solid objects.
+The zoom is the largest one at which everything that has to appear still fits,
+measured in the picture's own two directions rather than against GEANT4's standard
+view, which fits a sphere into the frame and so wastes the corners. Labels are
+pushed outward from the middle of the setup, past the edge of the part each one
+names, and any two that land on top of each other are separated.
+
+A run writes no picture in the two cases where one would be unwanted or
+duplicated: an interactive session, where the setup is already on screen, and
+`sim/macros/draw_geometry.mac`, which opens its own viewer to make a picture with
+particle paths in it. Both are recognised by the same rule — a viewer is already
+open. If the build has no offscreen graphics driver, the run says so and carries
+on without a picture.
+
+Tracks are drawn red for neutrons and yellow-orange for gammas, the same in every
+picture the engine draws.
 
 ## Build
 

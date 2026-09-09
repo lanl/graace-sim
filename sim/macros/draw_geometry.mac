@@ -1,0 +1,97 @@
+# Draw the setup with a few particle paths in it, and write it to a picture file.
+#
+#   graace-sim sim/macros/draw_geometry.mac
+#
+# Writes data/geometry_with_tracks.png. Nothing is displayed on screen and no
+# window opens, so this works over ssh and in scripts.
+#
+# Every run already writes a picture of the setup on its own, beside its output,
+# with no macro needed. This macro exists for the one thing that picture cannot
+# show: the paths the particles actually take. Showing those means firing
+# neutrons, which moves the random number sequence, so it is kept out of real
+# runs and done here instead.
+#
+# Because this macro opens its own viewer, the automatic picture stands down and
+# the camera angle, the zoom and the label positions below are all set by hand.
+# They are tuned to this one setup. Change the setup and they will need redoing —
+# which is why the automatic picture works them out from the setup's size instead.
+#
+# The setup drawn here is the one in examples/yaml_files/dd_with_moderator.yaml
+# and dt_with_moderator.yaml. For the setup without a moderator, delete the
+# /shielding/add line below and the two lines that colour and label it.
+#
+# A handful of neutrons are fired so their paths appear in the picture: red for
+# neutrons, yellow-orange for the gammas they produce, matching every other
+# picture the engine draws. The moderator is drawn see-through so the beam
+# entering it stays visible.
+
+/run/numberOfThreads 1
+
+# --- The setup, exactly as the run macros build it ---
+/sample/composition Fe 1
+/sample/density 7.87
+/sample/shape cylinder
+/sample/size 25
+/sample/height 40
+/sample/position 0 0 0
+/detector/add hpge_top 30 50 0 80 0
+/detector/add hpge_bottom 30 50 0 -80 0
+/shielding/add G4_POLYETHYLENE 50 0 0 -60
+/run/initialize
+
+/source/particle neutron
+/source/position 0 0 -130
+/source/shape point
+/source/energyType mono
+/source/energy 14.1
+
+# --- The picture: no window, written at the end ---
+/vis/open TSG_OFFSCREEN
+/vis/tsg/offscreen/set/size 1950 2250
+/vis/tsg/offscreen/set/file data/geometry_with_tracks.png
+# Left off while the view is being set up, so the picture is only written once,
+# by the /vis/viewer/flush at the end.
+/vis/viewer/set/autoRefresh false
+/vis/drawVolume
+
+/vis/viewer/set/background white
+/vis/viewer/set/style surface
+/vis/viewer/set/hiddenEdge true
+# Beam runs left to right. Slightly off to one side so the parts read as solid
+# objects rather than flat rectangles.
+/vis/viewer/set/viewpointThetaPhi 80 197
+/vis/viewer/set/upVector 0 1 0
+# Light from the camera, or every surface facing us is left in shadow.
+/vis/viewer/set/lightsMove with-camera
+
+# See-through moderator, so the beam inside it is not hidden.
+/vis/geometry/set/colour shielding_0 0 0.6 0.6 0.6 0.35
+
+# Each label is positioned by the point in the setup it is written next to,
+# chosen to be in clear space, and the text runs to the right from there.
+/vis/set/textColour black
+/vis/scene/add/text 0 20 -145 mm 22 0 0 neutron source
+/vis/scene/add/text 0 -125 -105 mm 22 0 0 polyethylene moderator
+/vis/scene/add/text 0 35 30 mm 22 0 0 iron sample
+/vis/scene/add/text 0 95 35 mm 22 0 0 HPGe detector
+/vis/scene/add/text 0 -95 35 mm 22 0 0 HPGe detector
+# Scale bar, in the clear space above the moderator.
+/vis/scene/add/scale 50 mm z 0 0 0 manual 0 118 -108 mm
+
+# --- A few neutrons, so their paths show ---
+/vis/scene/add/trajectories smooth
+/vis/scene/endOfEventAction accumulate
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set neutron red
+/vis/modeling/trajectories/drawByParticleID-0/setRGBA gamma 1 0.7 0.1 1
+/vis/modeling/trajectories/drawByParticleID-0/setDefault grey
+/run/beamOn 2
+
+# Framing comes last, once the paths exist. The zoom is measured against
+# everything in the picture, and some paths run right out to the edge of the
+# world, so framing set before the beam gets tighter once the beam is fired.
+/vis/viewer/set/targetPoint 0 0 -35 mm
+/vis/viewer/zoomTo 1.28
+
+# Draws the view and writes it to the file named above.
+/vis/viewer/flush

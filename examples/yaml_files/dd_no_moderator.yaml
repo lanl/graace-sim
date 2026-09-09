@@ -1,0 +1,83 @@
+# Generator comparison (1 of 4): DD generator, no moderator.
+#
+# These four configs form a 2x2 comparison. One axis is the neutron generator:
+# a DD generator makes 2.45 MeV neutrons, a DT generator makes 14.1 MeV. The
+# other axis is whether a slab of polyethylene sits between the generator and
+# the sample. Polyethylene is full of hydrogen, and a neutron loses most of its
+# energy when it hits a hydrogen nucleus, so the slab slows the neutrons down.
+#
+#                      no moderator            with moderator
+#   DD (2.45 MeV)   dd_no_moderator.yaml    dd_with_moderator.yaml
+#   DT (14.1 MeV)   dt_no_moderator.yaml    dt_with_moderator.yaml
+#
+# What to look for. Fast neutrons make gammas by bouncing off a nucleus and
+# leaving it in an excited state, which then emits a gamma. Iron's strongest
+# such line is at 847 keV. A 14.1 MeV neutron carries enough energy to open
+# reactions a 2.45 MeV neutron cannot, so the DT spectra hold lines and a
+# high-energy continuum the DD spectra do not.
+#
+# Slow neutrons instead get absorbed into the nucleus, which emits a much
+# higher-energy gamma cascade. Those absorption lines only appear once the
+# moderator has slowed the neutrons down, so they separate the right column
+# from the left.
+#
+# Everything except the generator energy and the moderator is identical across
+# all four runs, so any difference in the spectra comes from those two choices.
+
+# --- Source: 2.45 MeV (DD generator) neutrons, a pencil beam along +z ---
+# Placed 130 mm upstream so the moderator slab in the other two configs has
+# room to sit between the generator and the sample.
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -130}
+  energy:
+    type: mono
+    mono_mev: 2.45
+
+# --- Sample: an iron cylinder (radius 25 mm, height 40 mm) at the origin ---
+# Larger than the 10 mm sample in the other examples. Neutrons leaving the
+# moderator scatter in all directions rather than continuing straight, so a
+# wider sample catches more of them.
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 25      # cylinder radius
+  height_mm: 40    # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Moderator: none in this run ---
+
+# --- Detectors: two HPGe crystals, one above and one below the sample ---
+# Two rather than one purely to collect twice the counts for the same number of
+# neutrons. The two spectra are added together when plotting.
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+run:
+  neutrons: 10000000
+  seed: 1
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-09-09"
+  description: DD generator (2.45 MeV) on iron, no moderator.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: dd_no_moderator
+  sub_run: 0

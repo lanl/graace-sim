@@ -1,0 +1,56 @@
+# Generator comparison (3 of 4): DT generator, no moderator.
+#
+# See dd_no_moderator.yaml for the full description of the 2x2 comparison and
+# what to look for in the spectra. This run is the same as that one with the
+# generator energy raised from 2.45 MeV to 14.1 MeV.
+
+# --- Source: 14.1 MeV (DT generator) neutrons, a pencil beam along +z ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -130}
+  energy:
+    type: mono
+    mono_mev: 14.1
+
+# --- Sample: an iron cylinder (radius 25 mm, height 40 mm) at the origin ---
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 25      # cylinder radius
+  height_mm: 40    # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Moderator: none in this run ---
+
+# --- Detectors: two HPGe crystals, one above and one below the sample ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+run:
+  neutrons: 10000000
+  seed: 1
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-09-09"
+  description: DT generator (14.1 MeV) on iron, no moderator.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: dt_no_moderator
+  sub_run: 0

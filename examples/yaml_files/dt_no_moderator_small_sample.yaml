@@ -1,0 +1,115 @@
+# Self-shielding comparison (1 of 2): DT generator, no moderator, small sample.
+#
+# This run and dt_with_moderator_small_sample.yaml are copies of
+# dt_no_moderator.yaml and dt_with_moderator.yaml with the iron sample scaled
+# down by a factor of five in every direction. Nothing else changes: same
+# generator, same source position, same moderator, same detectors.
+#
+# What this is for. A big sample hides part of itself: a gamma made deep inside
+# has to get out through the rest of the iron, which absorbs it, so not every
+# gamma the sample makes is one a detector can see. That loss is self-shielding,
+# and it is why a measurement calibrated on a small standard reads low on a
+# large unknown.
+#
+#   iron cylinder      radius  height   iron on the beam   escape path
+#   full size          25 mm   40 mm    40 mm              up to 25 mm
+#   this run            5 mm    8 mm     8 mm              up to  5 mm
+#
+# The two dimensions do different jobs here, because the source is a pencil beam
+# along the cylinder axis and not a spray in all directions: every neutron enters
+# the sample on its axis whatever the radius is.
+#
+#   The height sets how many neutrons interact at all. Iron's mean free path for
+#   14.1 MeV neutrons is about 45 mm, so 40 mm of iron stops 58% of them and
+#   8 mm stops 16%. That is not self-shielding, just less material in the way.
+#
+#   The radius sets how far a gamma has to travel to get out. Iron's mean free
+#   path for an 847 keV gamma is about 21 mm, so a gamma made in the middle of
+#   the full-size sample is more likely absorbed than not, while one made in the
+#   middle of this sample almost always escapes. Below about 300 keV the
+#   full-size sample absorbs nearly everything made in its middle.
+#
+# So self-shielding does not show up as fewer counts. The small sample records
+# fewer counts than the full-size one simply because fewer neutrons interact in
+# it. It shows up as a change in the shape of the spectrum, and the measured
+# change runs the opposite way from what absorption on its own would suggest:
+# scale the two spectra to the same total and it is the small sample that is
+# missing its low-energy end, not the full-size one.
+#
+#   Measured, with the no-sample background subtracted, as each band's share of
+#   that run's own counts:
+#
+#     band              full size    small    small / full
+#     0-300 keV            47.1%     38.9%        0.83
+#     300-1000 keV         32.1%     33.8%        1.05
+#     1000-3000 keV        16.9%     22.1%        1.30
+#     above 3000 keV        3.8%      5.1%        1.35
+#
+#   Absorption does remove low-energy gammas from the full-size sample, but
+#   Compton scattering in that same iron takes high-energy gammas and gives them
+#   back at lower energy, and that second effect is the larger of the two. The
+#   full-size spectrum therefore comes out softer rather than harder. The last
+#   column is the result worth reporting: it climbs steadily with energy, which
+#   says a large sample under-reports its high-energy lines relative to its
+#   low-energy continuum.
+#
+# Why the pair. Adding the moderator slows the neutrons down, and iron absorbs
+# slow neutrons far more readily than fast ones, so in the moderated run the
+# outer layers of a full-size sample stop neutrons from reaching the middle as
+# well. The difference between the two runs is therefore the part of
+# self-shielding that comes from the neutrons rather than the gammas.
+
+# --- Source: 14.1 MeV (DT generator) neutrons, a pencil beam along +z ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -130}
+  energy:
+    type: mono
+    mono_mev: 14.1
+
+# --- Sample: an iron cylinder (radius 5 mm, height 8 mm) at the origin ---
+# One fifth the size of the full-size runs in every direction, so the shape is
+# unchanged and size is the only difference.
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 5       # cylinder radius
+  height_mm: 8     # cylinder height (along the beam axis)
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
+# --- Moderator: none in this run ---
+
+# --- Detectors: two HPGe crystals, one above and one below the sample ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+# The same count as every other run in the comparison, so the spectra can be read
+# against one another with no scaling.
+run:
+  neutrons: 10000000
+  seed: 1
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-09-09"
+  description: DT generator (14.1 MeV) on a small iron sample, no moderator.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: dt_no_moderator_small_sample
+  sub_run: 0
