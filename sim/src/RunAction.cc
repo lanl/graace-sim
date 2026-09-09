@@ -1,4 +1,5 @@
 #include "RunAction.hh"
+#include "GeometryPicture.hh"
 #include "SimIO.hh"
 #include "Config.hh"
 
@@ -12,6 +13,10 @@ void RunAction::BeginOfRunAction(const G4Run*)
   // buffers and writes its own part files. The master thread scores no hits, so
   // it opens nothing.
   if (G4Threading::IsMasterThread()) {
+    // The start of the run is the first moment every setting from the macro has
+    // been applied and the geometry is built, and no neutron has been fired yet,
+    // so it is where the picture of the setup is written.
+    WriteGeometryPicture();
     return;
   }
   SimIO::Instance().Open(Config::Instance().output_file);

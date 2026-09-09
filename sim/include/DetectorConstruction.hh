@@ -16,6 +16,12 @@ public:
   G4VPhysicalVolume* Construct() override;
   void ConstructSDandField() override;
 
+  // Half the side of a shielding slab's square footprint, in Geant4 length
+  // units. A fixed footprint keeps the /shielding/add command to material,
+  // thickness, and position. GeometryPicture reads it to work out how much room
+  // a slab takes up when it places that slab's label.
+  static constexpr double kSlabHalfWidth = 100.;  // mm before unit scaling
+
 private:
   // Build the sample material from the element mass-fraction composition and
   // density stored in Config.
@@ -26,11 +32,6 @@ private:
   void BuildSample(G4LogicalVolume* worldLV);
   void BuildShielding(G4LogicalVolume* worldLV);
   void BuildDetectors(G4LogicalVolume* worldLV);
-
-  // Half the side of a shielding slab's square footprint, in Geant4 length
-  // units. A fixed footprint keeps the /shielding/add command to material,
-  // thickness, and position.
-  static constexpr double kSlabHalfWidth = 100.;  // mm before unit scaling
 };
 
 #endif

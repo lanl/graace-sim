@@ -170,7 +170,10 @@ void DetectorConstruction::BuildShielding(G4LogicalVolume* worldLV)
       0.5 * block.thickness * mm);
     G4LogicalVolume* shieldLV =
       new G4LogicalVolume(shieldSolid, shieldMat, shieldName.c_str());
-    shieldLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.6, 0.6, 0.6)));
+    // Part see-through, so a beam passing through a moderator stays visible in
+    // pictures of the setup.
+    shieldLV->SetVisAttributes(
+      new G4VisAttributes(G4Colour(0.6, 0.6, 0.6, 0.35)));
     new G4PVPlacement(nullptr, block.position * mm, shieldLV,
                       shieldName, worldLV, false,
                       static_cast<G4int>(i), true);
@@ -190,7 +193,8 @@ void DetectorConstruction::BuildDetectors(G4LogicalVolume* worldLV)
     G4Tubs* detSolid = new G4Tubs(name, 0., detector.radius * mm,
                                   0.5 * detector.height * mm, 0., twopi);
     G4LogicalVolume* detLV = new G4LogicalVolume(detSolid, germanium, name);
-    detLV->SetVisAttributes(new G4VisAttributes(G4Colour(1.0, 0.5, 0.0)));
+    // Grey-green, which leaves orange free for the gamma paths.
+    detLV->SetVisAttributes(new G4VisAttributes(G4Colour(0.35, 0.55, 0.45)));
     new G4PVPlacement(nullptr, detector.position * mm, detLV, name,
                       worldLV, false, static_cast<G4int>(i), true);
   }
