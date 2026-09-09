@@ -1,0 +1,55 @@
+# Background measurement (2 of 4): DD generator, with a moderator, no sample at all.
+#
+# See dd_no_moderator_no_sample.yaml for why these four runs exist and how
+# they are used. This one is a copy of dd_with_moderator.yaml
+# with the iron sample deleted and everything else left alone.
+#
+# --- Source: 2.45 MeV (DD generator) neutrons, a pencil beam along +z ---
+source:
+  particle: neutron
+  position:
+    shape: point
+    center_mm: {x_mm: 0, y_mm: 0, z_mm: -130}
+  energy:
+    type: mono
+    mono_mev: 2.45
+
+# --- Sample: none in this run, which is the whole point of it ---
+
+# --- Moderator: 50 mm of polyethylene in the beam, ahead of where the sample would be ---
+# Identical placement to the runs that have a sample, so the slab's own gammas
+# are the same in the background run as in the measurement.
+shielding:
+  - material: G4_POLYETHYLENE
+    thickness_mm: 50
+    position_mm: {x_mm: 0, y_mm: 0, z_mm: -60}
+
+# --- Detectors: two HPGe crystals, one above and one below where the sample would be ---
+detectors:
+  - name: hpge_top
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: 80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+  - name: hpge_bottom
+    type: HPGe
+    position_mm: {x_mm: 0, y_mm: -80, z_mm: 0}
+    dimension_mm: {x_mm: 60, y_mm: 60, z_mm: 50}
+
+# --- Run: how many neutrons to fire ---
+# The same count as every other run in the comparison, so the background can be
+# subtracted directly with no scaling.
+run:
+  neutrons: 10000000
+  seed: 1
+
+# --- Metadata: who, when, and what this run is ---
+metadata:
+  author: GRAACE-SIM
+  date: "2026-09-09"
+  description: DD generator (2.45 MeV), no sample, behind 50 mm of polyethylene; background only.
+
+# --- Environment: the run's identity and where its files live ---
+environment:
+  working_directory: data
+  run_id: dd_with_moderator_no_sample
+  sub_run: 0
