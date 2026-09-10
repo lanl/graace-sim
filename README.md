@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/lanl/graace-sim/actions/workflows/validate.yml/badge.svg)](https://github.com/lanl/graace-sim/actions/workflows/validate.yml)
 [![Documentation Status](https://readthedocs.org/projects/graace-sim/badge/?version=latest)](https://graace-sim.readthedocs.io/en/latest/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22698352.svg)](https://doi.org/10.5281/zenodo.22698352)
 
 Full documentation: [graace-sim.readthedocs.io](https://graace-sim.readthedocs.io/en/latest/)
 
