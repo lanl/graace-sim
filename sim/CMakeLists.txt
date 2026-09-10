@@ -6,6 +6,8 @@ project(graace-sim)
 # aborts our configure step in multithreaded mode. Pre-seeding the probe result
 # skips that check. Do not remove — the build fails to configure without it.
 set(GEANT4_HAVE_H5_HAVE_THREADSAFE TRUE CACHE INTERNAL "pre-seed a GEANT4 config probe")
+
+
 find_package(Geant4 REQUIRED ui_all vis_all)
 include(${Geant4_USE_FILE})
 

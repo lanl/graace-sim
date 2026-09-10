@@ -1,0 +1,58 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Test, build, smoke test, and build docs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          pixi-version: v0.52.0
+          frozen: true
+          cache: true
+
+      - name: Run Python tests
+        run: pixi run --locked test
+
+      - name: Build simulation engine
+        run: pixi run --locked build-sim
+
+      - name: Run simulation smoke test
+        env:
+          G4VIS_DEFAULT_DRIVER: TSG_OFFSCREEN
+        run: |
+          smoke_dir="$RUNNER_TEMP/graace-smoke"
+          smoke_config="$RUNNER_TEMP/graace-smoke.yaml"
+          cp examples/yaml_files/example.yaml "$smoke_config"
+          sed -i 's/run_id: example/run_id: ci_smoke/' "$smoke_config"
+          sed -i "s#working_directory: data#working_directory: $smoke_dir#" "$smoke_config"
+
+          pixi run --locked python examples/scripts/run_from_yaml.py "$smoke_config"
+
+          run_dir="$smoke_dir/ci_smoke_000"
+          test -s "$run_dir/ci_smoke.mac"
+          test -s "$run_dir/logs/run.log"
+          test -s "$run_dir/results/geometry.png"
+          find "$run_dir/results" -type f -name '*.parquet' -print -quit | grep -q .
+
+      - name: Build documentation
+        run: |
+          pixi exec \
+            --spec "python=3.13" \
+            --spec "pip" \
+            bash -c 'python -m pip install -r docs/requirements.txt && sphinx-build -b html docs "$RUNNER_TEMP/graace-docs"'
