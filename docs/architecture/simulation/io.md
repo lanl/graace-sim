@@ -1,45 +1,68 @@
 # Output (IO)
 
-The engine records what happens in the detectors and writes it to disk. Output
-is written as Parquet files, stored with the run configuration so every run
-carries the exact settings that produced it. The primary recorded quantity is
-the gamma-emission data — the energies and counts seen by each detector — from
-which spectra, sensitivity, and minimum-flux estimates are built.
+The engine writes detector responses as Parquet files. The Python runner sets the
+base path to:
 
-## What is recorded
+```text
+<run_directory>/results/gamma_hits.parquet
+```
 
-<!-- Outline: the recorded quantities per gamma hit (energy in keV, time in ns),
-and any other tables. Define the columns and their units. The detector is not a
-column: each detector's hits are written to its own subdirectory, so the
-directory name identifies the detector. -->
+`SimIO` changes that base into one directory per detector and one or more part
+files per worker:
 
-## File format
+```text
+results/
+├── geometry.png
+└── <detector_name>/
+    ├── gamma_hits-part-w000-00000.parquet
+    └── gamma_hits-part-w001-00000.parquet
+```
 
-<!-- Outline: Parquet, one file per table; where files land (the run's output
-directory); filenames. Cross-reference general.md. -->
+The exact number of files depends on the number of workers and the number of
+responses. A buffer is flushed after one million hits for a detector, so a long
+run can create multiple part files per worker.
 
-## The run configuration alongside the output
+## Columns
 
-<!-- Outline: the validated configuration is stored with the output so the run
-is self-describing and reproducible. (How it is stored is decided elsewhere; do
-not pin it here.) -->
+Each Parquet part contains two `float64` columns:
 
-## Writing during a run
+| Column | Unit | Meaning |
+| --- | --- | --- |
+| `energy` | keV | Total energy deposited in the detector during one event |
+| `time` | ns | Earliest energy-deposit time in that event |
 
-<!-- Outline: how the writer is opened per run, appended to as events are
-processed, and closed; threading considerations if multithreaded. -->
+A row is written only when the detector receives positive energy during the
+event. The detector name is represented by the parent directory, not a column.
+There is no counts column; count spectra can be computed by binning the `energy`
+values.
 
-The engine runs multithreaded, so several worker threads record hits at once. The
-writer (`SimIO`) is thread-local: each worker owns its own buffers and writes its
-own Parquet part files, so nothing is shared and the hit path needs no locking.
-Each worker's part files carry a `w<thread>` tag in the name
-(`gamma_hits-part-w000-00000.parquet`) so two workers never target the same file.
-The master thread scores no hits — it only opens the run and prints the final
-summary. Because a detector's whole set of part files is read back as one table,
-the number of worker threads is transparent to the reader; row order across
-threads is not fixed, but the set of hits is complete.
+## Threading and ordering
 
-## Reading the output
+The multithreaded engine gives each worker a thread-local writer. Worker tags in
+part filenames prevent collisions, and the set of rows is complete. Row order
+across workers is not defined. The Python runner removes the existing `results/`
+directory before a rerun so stale part files are not mixed with new output.
 
-<!-- Outline: how the Python side reads Parquet back for analysis; the columns
-map to the recorded quantities above. -->
+## Reading results
+
+PyArrow can read all parts for a detector as one dataset:
+
+```python
+from pathlib import Path
+import pyarrow.dataset as ds
+
+results = Path("data/example_000/results/hpge")
+hits = ds.dataset(results, format="parquet").to_table()
+energy_kev = hits.column("energy")
+time_ns = hits.column("time")
+```
+
+Pandas can be used after converting the table with `hits.to_pandas()`.
+
+## Geometry image and log
+
+The automatic geometry image is written beside the Parquet output as
+`results/geometry.png` when `TSG_OFFSCREEN` is available. The engine log is
+written by the Python runner to `logs/run.log`. The validated YAML is not copied
+into the output; keep it with the run and use the generated `.mac` file as the
+exact engine input record.

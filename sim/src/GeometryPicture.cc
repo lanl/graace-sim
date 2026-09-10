@@ -10,6 +10,7 @@
 #include "G4ios.hh"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <filesystem>
 #include <sstream>
@@ -168,7 +169,6 @@ void WriteGeometryPicture()
   if (written) {
     return;
   }
-  written = true;
 
   // A viewer already being open means the setup is already being shown or drawn
   // by someone else, and a second picture is not wanted. See the header.
@@ -450,5 +450,6 @@ void WriteGeometryPicture()
 
   // Draws the view and writes it to the file named above.
   Apply("/vis/viewer/flush");
+  written = true;
   G4cout << "GeometryPicture: wrote " << picture.string() << G4endl;
 }

@@ -1,68 +1,66 @@
 API Reference
 =============
 
-The ``graace_sim`` Python package contains no physics — only the configuration
-schema, the loading and macro-writing step, and the subprocess runner. The GEANT4
-engine is driven entirely through the macro these produce.
-
-The stable entry points are ``graace_sim.load_simulation`` and
+The ``graace_sim`` Python package contains the configuration schema, YAML loading,
+GEANT4 macro writing, and subprocess runner. It does not contain the physics engine.
+The stable public entry points are ``graace_sim.load_simulation`` and
 ``graace_sim.run_simulation``.
+
+Public interface
+----------------
+
+.. automodule:: graace_sim
+   :members:
 
 Configuration schema (``models``)
 ----------------------------------
 
-The Pydantic models that describe one experiment and double as the run record.
+The Pydantic models describe one experiment and validate its YAML configuration.
 
-.. automodule:: models.base
+.. automodule:: graace_sim.models.base
    :members:
 
-.. automodule:: models.simulation
+.. automodule:: graace_sim.models.simulation
    :members:
 
-.. automodule:: models.source
+.. automodule:: graace_sim.models.source
    :members:
 
-.. automodule:: models.sample
+.. automodule:: graace_sim.models.sample
    :members:
 
-.. automodule:: models.shielding
+.. automodule:: graace_sim.models.shielding
    :members:
 
-.. automodule:: models.detector
+.. automodule:: graace_sim.models.detector
    :members:
 
-.. automodule:: models.run
+.. automodule:: graace_sim.models.run
    :members:
 
-.. automodule:: models.runner
+.. automodule:: graace_sim.models.runner
    :members:
 
-.. automodule:: models.environment
+.. automodule:: graace_sim.models.environment
    :members:
 
-.. automodule:: models.metadata
+.. automodule:: graace_sim.models.metadata
    :members:
 
-.. automodule:: models.vectors
+.. automodule:: graace_sim.models.vectors
    :members:
 
 Configuration loading and macro writing (``config``)
 -----------------------------------------------------
 
-Read a YAML configuration, validate it as a ``Simulation``, and turn it into the
-GEANT4 macro the engine reads.
-
-.. automodule:: config.yaml_io
+.. automodule:: graace_sim.config.yaml_io
    :members:
 
-.. automodule:: config.macro
+.. automodule:: graace_sim.config.macro
    :members:
 
 Runner (``runner``)
 -------------------
 
-Prepare the run folder, launch ``graace-sim``, stream its output, and verify the
-results.
-
-.. automodule:: runner.run_simulation
+.. automodule:: graace_sim.runner.run_simulation
    :members:
