@@ -40,6 +40,7 @@ libarrow = "*"
 libparquet = "*"
 libarrow-dataset = "*"
 expat = "*"
+freetype = ">=2.14.3"
 
 [package.run-dependencies]
 python = ">=3.12,<3.14"
@@ -50,7 +51,7 @@ geant4 = "*"
 libarrow = "*"
 libparquet = "*"
 libarrow-dataset = "*"
-
+freetype = ">=2.14.3"
 
 [tasks.test]
 description = "Run the Python test suite"

@@ -72,41 +72,36 @@ graace_record = load_simulation("config.yaml")
 run_simulation(graace_record)
 ```
 
-## Running Examples
+## Run a simulation
 
-Once the GRAACE-SIM environment is set up and the simulation is built, you can run the following examples:
-1. Run via a yaml config file from the root directory:
+Create a YAML configuration file in your project, then load and run it with the
+public Python interface:
 
-   ```
-   pixi run python examples/scripts/run_from_yaml.py examples/yaml_files/ni58_enriched.yaml
-   ```
+```python
+from graace_sim import load_simulation, run_simulation
 
-   This writes the macro, launches the simulation, shows the progress, and saves outputs
-   under `data/<run_id>_<sub_run>/`:
+graace_record = load_simulation("config.yaml")
+run_simulation(graace_record)
+```
 
-   ```
-   data/ni58_enriched_000/
-     ni58_enriched.mac              the exact macro that ran
-     results/<detector>/*.parquet   the gamma hits, one directory per detector
-     logs/run.log                   the engine's streamed output
-   ```
+The run writes the macro, engine log, geometry image, and detector Parquet files
+under the `working_directory` and `run_id` from your configuration.
 
-2. Run the simulation to verify geometries and run interactively:
+## Repository examples
 
-   ```
-   pixi run graace-sim
-   ```
+The YAML files and helper scripts under `examples/` are included in the source
+repository, but are not installed by the Pixi package. To run them, clone the
+repository and work from its root:
 
-   This launches the simulation in interactive mode, allowing you to verify geometries and interact with the simulation environment.
+```sh
+git clone https://github.com/lanl/graace-sim.git
+cd graace-sim
+pixi install
+pixi run python examples/scripts/run_from_yaml.py examples/yaml_files/ni58_enriched.yaml
+```
 
-   In the session terminal you can run the following commands to start the simulation: 
-
-   ```
-   /run/beamOn 100
-   ```
-
-   This will run the simulation for 100 neutron beam events. Don't do anything over 1000 otherwise it becomes visually cluttered in the GEANT4 interactive viewer.
-
+For an installed package in a separate project, use your own YAML configuration
+with the Python interface shown above.
 ## Copyright
 
 © 2026. Triad National Security, LLC. All rights reserved.
