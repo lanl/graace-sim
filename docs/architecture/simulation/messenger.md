@@ -1,76 +1,74 @@
-# Command Interface (Messenger)
+# Command interface (Messenger)
 
-The command interface defines the GEANT4 UI commands the engine understands —
-the `/source/*`, `/sample/*`, `/detector/*`, `/shielding/*`, and `/output/*`
-groups listed in [configuration.md](configuration.md). It is the piece that
-turns a line of a macro into a stored value the rest of the engine reads.
+`Messenger` is the GEANT4 UI command handler. It receives each macro line,
+parses the text, and stores values in the shared `Config` object. It does not build
+geometry or write output itself.
 
-It is built on GEANT4's `G4UImessenger`.
+## Commands
 
-## The commands
+Vectors are `x y z` in millimeters. Commands are applied through
+`G4UImessenger` and use one string argument.
 
-Every command takes its whole argument as one string, parsed in `SetNewValue`.
-Vectors are `x y z` in mm. The current commands:
-
-| Command | Argument | Config field |
+| Command | Argument | Meaning |
 | --- | --- | --- |
-| `/source/particle` | name | `source_particle` |
-| `/source/position` | `x y z` (mm) | `source_position` |
-| `/source/shape` | `point \| disk \| beam` | `source_shape` |
-| `/source/radius` | mm (disk/beam) | `source_radius` |
-| `/source/energyType` | `mono \| spectrum` | `source_energy_type` |
-| `/source/energy` | MeV (mono) | `source_energy` |
-| `/source/spectrumFile` | path to an `energy_mev intensity` list | `source_spectrum_file` |
-| `/source/timing` | `continuous \| single \| periodic` | `source_timing` |
-| `/source/pulseWidth` | ns (single/periodic) | `source_pulse_width_ns` |
-| `/source/pulsePeriod` | ns (periodic) | `source_pulse_period_ns` |
-| `/sample/composition` | `Sym frac Sym frac ...` | `sample_composition` |
-| `/sample/isotope` | `symbol mass_number atom_fraction` | one entry in `sample_isotopes` |
-| `/sample/density` | g/cm3 | `sample_density` |
-| `/sample/shape` | `cube \| sphere \| cylinder` | `sample_shape` |
-| `/sample/size` | mm | `sample_size` |
-| `/sample/height` | mm (cylinder) | `sample_height` |
-| `/sample/position` | `x y z` (mm) | `sample_position` |
-| `/detector/add` | `name radius_mm height_mm x y z` | one entry in `detectors` |
-| `/shielding/add` | `material thickness_mm x y z` | one entry in `shielding` |
-| `/output/file` | base path | `output_file` |
+| `/source/particle` | name | Particle name, normally `neutron` |
+| `/source/position` | `x y z` | Source center in mm |
+| `/source/shape` | `point \| disk \| beam` | Source emission shape |
+| `/source/radius` | mm | Disk radius or beam radial sigma |
+| `/source/energyType` | `mono \| spectrum` | Energy distribution |
+| `/source/energy` | MeV | Mono energy |
+| `/source/spectrumFile` | path | Text spectrum file |
+| `/source/timing` | `continuous \| single \| periodic` | Pulse mode |
+| `/source/pulseWidth` | ns | Pulse width |
+| `/source/pulsePeriod` | ns | Period between pulses |
+| `/sample/composition` | `Sym frac ...` | Element mass fractions |
+| `/sample/isotope` | `symbol mass_number atom_fraction` | One isotope entry |
+| `/sample/density` | g/cm³ | Sample density |
+| `/sample/shape` | `cube \| sphere \| cylinder` | Sample shape |
+| `/sample/size` | mm | Cube side or sphere/cylinder radius |
+| `/sample/height` | mm | Cylinder height |
+| `/sample/position` | `x y z` | Sample center in mm |
+| `/detector/add` | `name radius height x y z` | Add an HPGe cylinder |
+| `/shielding/add` | `material thickness x y z` | Add a square slab |
+| `/output/file` | path | Base Parquet output path |
 
-`/detector/add` and `/shielding/add` append one item per line, so a run can hold
-several. The first `/detector/add` replaces the built-in default detector. A
-detector's name labels both its volume and its output subdirectory.
+`/detector/add`, `/shielding/add`, and `/sample/isotope` can appear multiple
+times. The first detector command clears the built-in default detector. Detector
+names become output directory names and must not contain path separators. Sample
+isotope entries for an element must use unique mass numbers and atom fractions
+that sum to 1.0.
 
-The sample itself is optional. A macro with no `/sample/composition` command
-leaves the composition empty, and the geometry builder then places no sample
-volume — the world holds only the source, detectors, and any shielding. The
-Python macro writer omits every `/sample/*` command when a config has no sample.
+## How values are used
 
-`/sample/isotope` also appends one line per isotope, keyed by element symbol. It
-is optional: an element with no `/sample/isotope` line uses natural isotopic
-abundances. When lines are present for an element, that element is built from the
-listed isotopes by atom fraction (fraction by number of atoms), which must sum to
-1.0.
+`Config` stores the values received by `Messenger`:
 
-`/output/file` sets the base Parquet path; each detector's hits are written into
-its own subdirectory, `results/<detector_name>/gamma_hits-part-NNNNN.parquet`.
+- `DetectorConstruction` reads sample, shielding, and detector settings while
+  building the world;
+- `PrimaryGeneratorAction` reads source settings on the first event;
+- `RunAction` and `SimIO` read the output path;
+- `SensitiveDetector` writes detector responses through `SimIO`.
 
-## What a messenger does
+The messenger accepts text and performs basic parsing and checks. The Python
+Pydantic models perform the more complete validation before a generated macro is
+written.
 
-<!-- Outline: registers command directories and commands; parses each command's
-argument; stores the value where the geometry builder and actions can read it.
-Holds no physics, only configuration state. -->
+## Example
 
-## Where values are stored
-
-<!-- Outline: the shared configuration object the messenger writes into and the
-geometry builder / actions read from. One place per configured value. -->
-
-## Adding a command
-
-<!-- Outline: the steps to add a new configurable value — declare the command,
-parse its argument, store it, read it where it is used. Keep names snake_case to
-match the Pydantic field. -->
-
-## Relationship to the geometry and actions
-
-<!-- Outline: the messenger only records values; geometry.md builds the world
-from them and Actions.md uses them at run time. -->
+```text
+/sample/composition Fe 1.0
+/sample/density 7.87
+/sample/shape cylinder
+/sample/size 10
+/sample/height 20
+/sample/position 0 0 0
+/detector/add hpge 30 50 0 80 0
+/output/file data/results/gamma_hits.parquet
+/run/initialize
+/source/particle neutron
+/source/position 0 0 -50
+/source/shape point
+/source/energyType mono
+/source/energy 14.1
+/source/timing continuous
+/run/beamOn 10000
+```

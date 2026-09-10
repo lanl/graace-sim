@@ -1,54 +1,59 @@
-# Configuring the Engine
+# Configuring the engine
 
-The engine is built once and produces different experiments depending only on
-the commands it is fed. Configuration reaches it as a GEANT4 macro: a text file
-of UI commands. The Python control layer writes this macro from the validated
-configuration; the engine reads it at startup.
+The engine is built once and produces different experiments from GEANT4 macro
+commands. The Python control layer converts a validated `Simulation` model into
+that macro; the C++ program reads it at startup.
 
-There are no Python-to-C++ bindings. The macro is the entire interface between
-the two layers.
+There are no Python-to-C++ bindings. The macro is the interface between the two
+layers.
 
-## The macro
+## Macro order
 
-<!-- Outline: what a macro is (a list of /command value lines), where it comes
-from (Python writes it into the run folder), and a short annotated example
-showing /source, /sample, /detector, /shielding, /output, /run/initialize,
-/run/beamOn. -->
+Geometry commands must be applied before `/run/initialize` because GEANT4 builds
+the world during initialization. The Python macro writer uses this order:
+
+```text
+/run/numberOfThreads <count>
+/sample/*                         optional
+/detector/add <...>               one or more
+/shielding/add <...>              optional
+/output/file <path>
+/run/initialize
+/random/setSeeds <seed> <seed>
+/source/*
+/run/beamOn <neutrons>
+```
+
+The source is configured after initialization because the primary generator reads
+those values when the first event is generated. A hand-written macro can use the
+same pattern. `sim/macros/example.mac` is a complete batch example.
 
 ## Command groups
 
-The engine registers one command group per configurable part. Each maps onto a
-module built in [geometry.md](geometry.md):
+- `/source/*` configures particle, position, shape, energy, spectrum, and timing.
+- `/sample/*` configures optional composition, isotope entries, density, shape,
+  size, height, and position. Without `/sample/composition`, no sample volume is
+  built.
+- `/detector/add` appends one HPGe detector cylinder per line. The first line
+  replaces the built-in default detector.
+- `/shielding/add` appends a shielding slab per line.
+- `/output/file` sets the base Parquet path. Detector subdirectories and part-file
+  names are added by `SimIO`.
 
-- `/source/*` — the neutron source (particle, position, shape, energy, timing).
-- `/sample/*` — the assayed material (composition, density, shape, position, and
-  an optional per-element isotope breakdown via `/sample/isotope`). The sample is
-  optional; with no `/sample/composition` command, no sample volume is built.
-- `/detector/*` — the gamma detectors, one per `/detector/add` line.
-- `/shielding/*` — shielding blocks, one per `/shielding/add` line.
-- `/output/*` — what to record and where to write it. The base path names a
-  file such as `results/gamma_hits.parquet`; the engine writes each detector's
-  hits into its own subdirectory,
-  `results/<detector_name>/gamma_hits-part-NNNNN.parquet`.
+See the [command reference](messenger.md) for argument formats.
 
-The full command list, with argument formats, is in the command interface — see
-[messenger.md](messenger.md). Some commands take **one line per item** so a run can
-hold several: `/detector/add name radius_mm height_mm x y z`,
-`/shielding/add material thickness_mm x y z`, and
-`/sample/isotope symbol mass_number atom_fraction` (optional; absent means
-natural abundances). A detector's name labels both its volume and its output
-subdirectory.
+## Python model relationship
 
-The commands themselves are defined by the command interface — see
-[messenger.md](messenger.md).
+The Python model uses descriptive `snake_case` names and validates values before
+writing commands. Some GEANT4 command names use camelCase because those are the
+registered UI paths, for example `/source/energyType` and `/source/pulseWidth`.
 
-## Order of commands
+The current model-to-engine mapping has two important limitations:
 
-<!-- Outline: which commands must come before /run/initialize (geometry and
-material setup) and which come after (source, run). Why order matters. -->
+- detector `type`, `energy_resolution_kev`, and the `y_mm` detector dimension are
+  accepted by Pydantic but are not sent to or used by the C++ engine;
+- the engine always builds detectors as HPGe cylinders and uses half of
+  `dimension_mm.x_mm` as the radius and `dimension_mm.z_mm` as the height.
 
-## Relationship to the Pydantic models
-
-<!-- Outline: every command corresponds to a field on a Pydantic model; the
-Python side turns the validated model into these commands. Names stay
-snake_case on both sides. Cross-reference python/models.md. -->
+Keep the generated `.mac` file with the original YAML when recording a run: it is
+the exact command list sent to GEANT4.

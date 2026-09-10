@@ -10,11 +10,11 @@
 
 Full documentation: [graace-sim.readthedocs.io](https://graace-sim.readthedocs.io/en/latest/)
 
-GRAACE-SIM is a material-agnostic GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments, enabling users to configure materials and geometries, run simulations, and generate prompt gamma data for experiment planning and analysis development.
+GRAACE-SIM is a material-agnostic GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments. It lets you describe a source, sample, shielding, and detectors in YAML, run the compiled simulation engine, and inspect gamma-hit data without editing C++ code.
 
 ## Install with Pixi
 
-Install Pixi if it is not already available:
+Install [Pixi](https://pixi.sh/latest/installation/) if it is not already available:
 
 ```sh
 curl -fsSL https://pixi.sh/install.sh | sh
@@ -28,21 +28,19 @@ cd my-simulation
 pixi init
 ```
 
-Before adding GRAACE-SIM, enable Pixi's package-build preview feature in the
-new `pixi.toml` file by adding this line under `[workspace]`:
+Enable Pixi's package-build preview feature by adding this line under `[workspace]` in the new `pixi.toml`:
 
 ```toml
 preview = ["pixi-build"]
 ```
 
-Add the GRAACE-SIM release you want. The tag pins the package version so later
-releases do not change an existing environment:
+Add the current release. The tag keeps later releases from changing this environment:
 
 ```sh
-pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.0 graace-sim
+pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.1 graace-sim
 ```
 
-Alternatively, replace the contents of `pixi.toml` with:
+Or replace the contents of `pixi.toml` with:
 
 ```toml
 [workspace]
@@ -52,7 +50,7 @@ platforms = ["osx-arm64", "linux-64"]
 preview = ["pixi-build"]
 
 [dependencies]
-graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.0" }
+graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.1" }
 ```
 
 Install the environment:
@@ -61,49 +59,53 @@ Install the environment:
 pixi install
 ```
 
-Pixi builds the GEANT4 engine and installs it together with the Python package
-and its runtime dependencies. The package currently supports `osx-arm64` and
-`linux-64` Pixi platforms.
-
-The public Python interface is:
-
-```python
-from graace_sim import load_simulation, run_simulation
-
-graace_record = load_simulation("config.yaml")
-run_simulation(graace_record)
-```
+The package supports the `osx-arm64` and `linux-64` Pixi platforms. Pixi builds and installs the GEANT4 engine together with the Python control layer and its runtime dependencies.
 
 ## Run a simulation
 
-Create a YAML configuration file in your project, then load and run it with the
-public Python interface:
+The public Python interface loads a YAML file and runs the validated configuration:
 
 ```python
 from graace_sim import load_simulation, run_simulation
 
-graace_record = load_simulation("config.yaml")
-run_simulation(graace_record)
+simulation = load_simulation("config.yaml")
+run_simulation(simulation)
 ```
 
-The run writes the macro, engine log, geometry image, and detector Parquet files
-under the `working_directory` and `run_id` from your configuration.
+The runner finds `graace-sim` on `PATH`, writes a GEANT4 macro, launches the engine, and returns the run directory. A typical run directory contains:
 
-## Repository examples
+```text
+<working_directory>/<run_id>_<sub_run>/
+├── <run_id>.mac
+├── logs/run.log
+└── results/
+    ├── geometry.png
+    └── <detector_name>/gamma_hits-part-w000-00000.parquet
+```
 
-The YAML files and helper scripts under `examples/` are included in the source
-repository, but are not installed by the Pixi package. To run them, clone the
-repository and work from its root:
+The Parquet files contain one row for each detector response, with `energy` in keV and `time` in ns. The automatic geometry picture is written when an offscreen graphics driver is available; it is skipped for an interactive viewer or a build without that driver.
+
+See the [getting started guide](https://graace-sim.readthedocs.io/en/latest/getting-started.html) for a complete example and output-reading instructions.
+
+## Run the repository examples
+
+The YAML files and helper scripts under `examples/` are included in the source repository, but are not installed by the Pixi package. To run them, clone the repository and work from its root:
 
 ```sh
 git clone https://github.com/lanl/graace-sim.git
 cd graace-sim
 pixi install
-pixi run python examples/scripts/run_from_yaml.py examples/yaml_files/ni58_enriched.yaml
+pixi run --locked python examples/scripts/run_from_yaml.py examples/yaml_files/ni58_enriched.yaml
 ```
 
-For an installed package in a separate project, use your own YAML configuration
-with the Python interface shown above.
+The repository workspace also provides these useful tasks:
+
+```sh
+pixi run --locked test
+pixi run --locked build-sim
+```
+
+For an installed package in a separate project, use your own YAML configuration with the Python interface above.
 ## Copyright
 
 © 2026. Triad National Security, LLC. All rights reserved.

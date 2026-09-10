@@ -1,40 +1,44 @@
 # Actions
 
-GEANT4 lets the engine hook into a run at several levels — the whole run, each
-event, each track, and each step. The action classes are where the engine
-decides what to record as neutrons and gammas move through the setup.
-
-They are built on GEANT4's action base classes, wired together by an action
-initialization class.
-
-## Action initialization
-
-<!-- Outline: the class that registers the primary generator and the run/event/
-stepping actions with the run manager. -->
+GEANT4 calls user actions at run and event boundaries. GRAACE-SIM registers
+three worker actions and one master action through `ActionInitialization`.
 
 ## Primary generator
 
-<!-- Outline: how each event's starting neutron(s) are produced from the
-configured source (position, energy, timing). Built on the General Particle
-Source. -->
+`PrimaryGeneratorAction` uses GEANT4's General Particle Source. On the first
+event it reads the source settings from `Config` and configures the particle,
+position distribution, direction, energy distribution, and timing. It then
+creates the primary vertex for each event.
+
+A point source is placed at its configured center. A disk uses a circular plane;
+a beam uses GEANT4's radial beam sigma. The source direction is positive z.
 
 ## Run action
 
-<!-- Outline: start/end of a run — open and close the output, any per-run
-setup and summary. -->
+Worker `RunAction` instances open their thread-local `SimIO` writer at the start
+of a run and flush it at the end. The master instance writes the geometry picture
+at the beginning and prints the total event count at the end. The master does not
+record detector hits.
 
 ## Event action
 
-<!-- Outline: per-event bookkeeping — what is collected per event before it is
-written. -->
+`EventAction` reports progress every 1000 processed events. It does not own the
+hit data; the sensitive detector records the detector response.
 
-## Stepping action
+## Sensitive detector
 
-<!-- Outline: per-step logic — detecting the interactions of interest (neutron
-capture, gamma production) and passing them to the output writer. Keep this only
-as detailed as the recorded quantities require. -->
+Each detector volume has a `SensitiveDetector`. For every event it sums positive
+energy deposits in that volume. At the end of the event, if the sum is positive,
+it sends one record to `SimIO` containing:
 
-## Relationship to output
+- total deposited energy in keV;
+- time of the earliest deposit in ns;
+- detector identity, supplied by the detector output directory.
 
-<!-- Outline: the actions gather the recorded quantities; io.md defines how they
-are written. Cross-reference io.md. -->
+This is an event-level detector response, not an interaction-level event log.
+
+## Threading
+
+The engine uses GEANT4's multithreaded run manager. Each worker has its own
+`SimIO` instance and writes its own part files, so worker output does not need a
+shared writer lock. The worker identifier in each filename prevents collisions.
