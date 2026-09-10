@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from models.base import StrictModel
+from graace_sim.models.base import StrictModel
 
 
 class Example(StrictModel):

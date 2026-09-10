@@ -6,8 +6,8 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from config.yaml_io import load_simulation
-from models.simulation import Simulation
+from graace_sim.config.yaml_io import load_simulation
+from graace_sim.models.simulation import Simulation
 
 EXAMPLE = Path(__file__).parents[2] / "examples" / "yaml_files" / "example.yaml"
 

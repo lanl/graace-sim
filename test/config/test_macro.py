@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from config import macro as macro_module
-from config.macro import _thread_count, write_macro
-from config.yaml_io import load_simulation
-from models.simulation import Simulation
+from graace_sim.config import macro as macro_module
+from graace_sim.config.macro import _thread_count, write_macro
+from graace_sim.config.yaml_io import load_simulation
+from graace_sim.models.simulation import Simulation
 
 EXAMPLE = Path(__file__).parents[2] / "examples" / "yaml_files" / "example.yaml"
 

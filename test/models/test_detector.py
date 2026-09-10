@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from config.yaml_io import load_simulation
-from models.detector import Detector
-from models.vectors import Size3Mm, Vec3Mm
+from graace_sim.config.yaml_io import load_simulation
+from graace_sim.models.detector import Detector
+from graace_sim.models.vectors import Size3Mm, Vec3Mm
 
 EXAMPLE = Path(__file__).parents[2] / "examples" / "yaml_files" / "example.yaml"
 

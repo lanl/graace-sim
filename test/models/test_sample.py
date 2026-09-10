@@ -3,14 +3,14 @@
 import pytest
 from pydantic import ValidationError
 
-from models.sample import (
+from graace_sim.models.sample import (
     COMPOSITION_TOLERANCE,
     Sample,
     SampleComposition,
     SampleElement,
     SampleIsotope,
 )
-from models.vectors import Vec3Mm
+from graace_sim.models.vectors import Vec3Mm
 
 ORIGIN = Vec3Mm(x_mm=0, y_mm=0, z_mm=0)
 

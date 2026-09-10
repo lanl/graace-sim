@@ -1,9 +1,12 @@
 API Reference
 =============
 
-The Python control layer under ``src/``. It contains no physics — only the
-configuration schema, the loading and macro-writing step, and the subprocess
-runner. The GEANT4 engine is driven entirely through the macro these produce.
+The ``graace_sim`` Python package contains no physics — only the configuration
+schema, the loading and macro-writing step, and the subprocess runner. The GEANT4
+engine is driven entirely through the macro these produce.
+
+The stable entry points are ``graace_sim.load_simulation`` and
+``graace_sim.run_simulation``.
 
 Configuration schema (``models``)
 ----------------------------------

@@ -2,8 +2,8 @@
 
 from pydantic import Field, field_validator
 
-from models.base import StrictModel, check_directory_safe_name
-from models.vectors import Size3Mm, Vec3Mm
+from graace_sim.models.base import StrictModel, check_directory_safe_name
+from graace_sim.models.vectors import Size3Mm, Vec3Mm
 
 
 class Detector(StrictModel):

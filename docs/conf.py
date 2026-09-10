@@ -4,7 +4,7 @@ import os
 import sys
 
 # The Python control layer imports its own packages by bare name (e.g.
-# `from models.simulation import Simulation`), relying on `src` being on the
+# `from graace_sim.models.simulation import Simulation`), relying on `src` being on the
 # import path. Put it there so autodoc can import the modules.
 sys.path.insert(0, os.path.abspath("../src"))
 

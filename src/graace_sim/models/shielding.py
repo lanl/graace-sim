@@ -2,8 +2,8 @@
 
 from pydantic import Field
 
-from models.base import StrictModel
-from models.vectors import Vec3Mm
+from graace_sim.models.base import StrictModel
+from graace_sim.models.vectors import Vec3Mm
 
 
 class Shielding(StrictModel):

@@ -6,7 +6,7 @@ Where the run's files live is a separate concern, handled by ``WorkingEnvironmen
 
 from pydantic import Field
 
-from models.base import StrictModel
+from graace_sim.models.base import StrictModel
 
 
 class Metadata(StrictModel):

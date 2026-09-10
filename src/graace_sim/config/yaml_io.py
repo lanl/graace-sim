@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
-from models.simulation import Simulation
+from graace_sim.models.simulation import Simulation
 
 
 def load_simulation(path: str | Path) -> Simulation:

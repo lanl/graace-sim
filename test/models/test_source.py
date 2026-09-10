@@ -3,8 +3,8 @@
 import pytest
 from pydantic import ValidationError
 
-from models.source import SourceEnergy, SourcePosition, SourceTiming
-from models.vectors import Vec3Mm
+from graace_sim.models.source import SourceEnergy, SourcePosition, SourceTiming
+from graace_sim.models.vectors import Vec3Mm
 
 CENTER = Vec3Mm(x_mm=0, y_mm=0, z_mm=0)
 
