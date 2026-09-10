@@ -10,15 +10,30 @@ Full documentation: [graace-sim.readthedocs.io](https://graace-sim.readthedocs.i
 
 GRAACE-SIM is a material-agnostic GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments, enabling users to configure materials and geometries, run simulations, and generate prompt gamma data for experiment planning and analysis development.
 
-## Getting Started
+## Install with Pixi
 
-In order to run the simulation you need to have Pixi installed. Pixi can be installed via:
+Install Pixi if it is not already available:
 
-```
+```sh
 curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-Create a small Pixi project and pin the GRAACE-SIM release you want:
+Create a directory for your simulation project and initialize a Pixi workspace:
+
+```sh
+mkdir my-simulation
+cd my-simulation
+pixi init
+```
+
+Add the GRAACE-SIM release you want. The tag pins the package version so later
+releases do not change an existing environment:
+
+```sh
+pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.0 graace-sim
+```
+
+Alternatively, add the dependency directly to `pixi.toml`:
 
 ```toml
 [workspace]
@@ -31,11 +46,15 @@ preview = ["pixi-build"]
 graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.0" }
 ```
 
-Then install the environment. Pixi builds the GEANT4 engine and installs it beside the Python package:
+Install the environment:
 
-```
+```sh
 pixi install
 ```
+
+Pixi builds the GEANT4 engine and installs it together with the Python package
+and its runtime dependencies. The package currently supports `osx-arm64` and
+`linux-64` Pixi platforms.
 
 The public Python interface is:
 
