@@ -1671,6 +1671,7 @@ packages:
   - libarrow >=25.0.0,<25.1.0a0
   - libarrow-dataset
   - libarrow-dataset >=25.0.0,<25.1.0a0
+  - libexpat >=2.8.1,<3.0a0
   - libgcc >=16
   - libparquet
   - libparquet >=25.0.0,<25.1.0a0
@@ -1681,7 +1682,7 @@ packages:
   - python_abi 3.13.* *_cp313
   - pyyaml
   input:
-    hash: d6397cfe801ff759df707c1bf31f2ee3fbd1a46aa4a1fd56b8c5b7e2040bb36a
+    hash: 0e91fcaea09f61fd3fde32cda3a0f6de1e93cfa40113475f72b12942e5d944b6
     globs: []
 - conda: .
   name: graace-sim
@@ -1696,6 +1697,7 @@ packages:
   - libarrow-dataset
   - libarrow-dataset >=25.0.0,<25.1.0a0
   - libcxx >=23
+  - libexpat >=2.8.1,<3.0a0
   - libparquet
   - libparquet >=25.0.0,<25.1.0a0
   - loguru
@@ -1704,7 +1706,7 @@ packages:
   - python_abi 3.13.* *_cp313
   - pyyaml
   input:
-    hash: d6397cfe801ff759df707c1bf31f2ee3fbd1a46aa4a1fd56b8c5b7e2040bb36a
+    hash: 0e91fcaea09f61fd3fde32cda3a0f6de1e93cfa40113475f72b12942e5d944b6
     globs: []
 - conda: https://conda.anaconda.org/conda-forge/linux-64/graphite2-1.3.15-hecca717_0.conda
   sha256: 885fa7d1d7e2ad9ed0a700ee0d81ceb49de278253082d517959b22d6336eecce

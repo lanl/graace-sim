@@ -39,6 +39,7 @@ geant4 = "*"
 libarrow = "*"
 libparquet = "*"
 libarrow-dataset = "*"
+expat = "*"
 
 [package.run-dependencies]
 python = ">=3.12,<3.14"
