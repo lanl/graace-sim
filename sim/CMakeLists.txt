@@ -16,6 +16,10 @@ if(DEFINED ENV{CONDA_PREFIX})
     PATHS "$ENV{CONDA_PREFIX}/include" NO_DEFAULT_PATH)
   find_library(EXPAT_LIBRARY NAMES expat
     PATHS "$ENV{CONDA_PREFIX}/lib" NO_DEFAULT_PATH)
+  set(EXPAT_INCLUDE_DIR "${EXPAT_INCLUDE_DIR}" CACHE PATH
+    "Pixi Expat include directory" FORCE)
+  set(EXPAT_LIBRARY "${EXPAT_LIBRARY}" CACHE FILEPATH
+    "Pixi Expat library" FORCE)
 endif()
 
 find_package(Geant4 REQUIRED ui_all vis_all)
