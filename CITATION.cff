@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use GRAACE-Sim in your research, please cite it using the following metadata."
+title: "GRAACE-Sim"
+type: software
+version: 0.2.1
+license: GPL-3.0-or-later
+
+authors:
+  - given-names: Alex
+    family-names: Long
+    affiliation: Los Alamos National Laboratory
+
+abstract: >
+  GRAACE-Sim is a modular, reusable simulation framework for Prompt Gamma Activation Analysis (PGAA) and neutron activation analysis, pairing a compiled particle-transport engine (GEANT4) with a Python configuration layer. Strict schema validation, built-in catalogs of detectors and materials, and custom configuration files make simulations easy to set up, configure, and reproduce.
+
+repository-code: "https://github.com/lanl/graace-sim"
+
+keywords:
+  - GEANT4
+  - prompt gamma activation analysis
+  - PGAA
+  - neutron activation analysis
+  - gamma spectroscopy
+  - Monte Carlo simulation
