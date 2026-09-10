@@ -6,6 +6,9 @@
 __pycache__/
 *.py[cod]
 
+# Generated package artifacts
+dist/
+
 # Keep the build directory clean
 build/*
 

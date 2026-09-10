@@ -1,46 +1,69 @@
 [project]
 name = "graace-sim"
-version = "0.1.0"
+version = "0.2.0"
 description = "GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments"
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
+preview = ["pixi-build"]
 
 [dependencies]
-geant4 = "*"
-libarrow = "*"
-libparquet = "*"
-libarrow-dataset = "*"
-cmake = "*"
-ninja = "*"
-cxx-compiler = "*"
+graace-sim = { path = "." }
+python = ">=3.12,<3.14"
 pyarrow = "*"
 pandas = ">=2.3.1,<3.0"
 pillow = ">=11.3.0,<12.0"
 matplotlib = "*"
+pytest = "*"
+
+[package]
+name = "graace-sim"
+version = "0.2.0"
+description = "GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments"
+license = "GPL-3.0-or-later"
+license-file = "LICENSE"
+readme = "README.md"
+repository = "https://github.com/lanl/graace-sim"
+
+[package.build]
+backend = { name = "pixi-build-cmake", version = "0.*" }
+channels = ["conda-forge"]
+
+[package.build.configuration]
+extra-args = ["-DCMAKE_BUILD_TYPE=Release"]
+extra-input-globs = ["src/**/*.py"]
+
+[package.host-dependencies]
+cmake = "*"
+python = ">=3.12,<3.14"
+geant4 = "*"
+libarrow = "*"
+libparquet = "*"
+libarrow-dataset = "*"
+expat = "*"
+
+[package.run-dependencies]
 python = ">=3.12,<3.14"
 pydantic = ">=2"
 pyyaml = "*"
 loguru = "*"
-pytest = "*"
+geant4 = "*"
+libarrow = "*"
+libparquet = "*"
+libarrow-dataset = "*"
 
-# Put the source directory on the import path for everything run in the
-# environment (the test suite and the example scripts), so nothing has to adjust
-# `sys.path` by hand.
-[activation]
-env = { PYTHONPATH = "src" }
 
 [tasks.test]
 description = "Run the Python test suite"
 cmd = "pytest"
 
 [tasks.build-sim]
-description = "Compile the GEANT4 engine and install graace-sim onto PATH"
-cmd = "expat_library=$(find \"$CONDA_PREFIX/lib\" -maxdepth 1 -name 'libexpat.*' -print -quit) && cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_PREFIX_PATH=$CONDA_PREFIX -DEXPAT_INCLUDE_DIR=$CONDA_PREFIX/include -DEXPAT_LIBRARY=$expat_library -DHDF5_ROOT=$CONDA_PREFIX && cmake --build build && cmake --install build"
+description = "Build the graace-sim conda package with its GEANT4 engine"
+cmd = "pixi build --output-dir dist"
 
 [tasks.clean-sim]
-description = "Remove the build directory"
-cmd = "rm -rf build"
+description = "Remove package build artifacts"
+cmd = "rm -rf dist"
 
 [tasks.rebuild-sim]
-description = "Clean and compile the GEANT4 engine from scratch"
+description = "Clean and build the graace-sim conda package"
 depends-on = ["clean-sim", "build-sim"]

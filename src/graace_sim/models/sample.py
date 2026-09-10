@@ -5,8 +5,8 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from models.base import StrictModel
-from models.vectors import Vec3Mm
+from graace_sim.models.base import StrictModel
+from graace_sim.models.vectors import Vec3Mm
 
 # Every chemical element symbol, hydrogen through oganesson.
 CHEMICAL_ELEMENT_SYMBOLS = frozenset({

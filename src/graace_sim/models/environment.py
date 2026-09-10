@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pydantic import Field, field_validator
 
-from models.base import StrictModel, check_directory_safe_name
+from graace_sim.models.base import StrictModel, check_directory_safe_name
 
 
 class WorkingEnvironment(StrictModel):

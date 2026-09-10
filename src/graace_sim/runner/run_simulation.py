@@ -14,8 +14,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from config.macro import write_macro
-from models.simulation import Simulation
+from graace_sim.config.macro import write_macro
+from graace_sim.models.simulation import Simulation
 
 # The engine prints `  ... processed N events` every 1000 events
 # (sim/src/EventAction.cc); the total is the configured neutron count.

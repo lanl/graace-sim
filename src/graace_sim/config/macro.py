@@ -17,8 +17,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from models.simulation import Simulation
-from models.vectors import Vec3Mm
+from graace_sim.models.simulation import Simulation
+from graace_sim.models.vectors import Vec3Mm
 
 
 def _format(value: float) -> str:

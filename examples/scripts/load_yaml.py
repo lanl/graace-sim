@@ -7,7 +7,7 @@ Run it with pixi:
 
 from pathlib import Path
 
-from config.yaml_io import load_simulation
+from graace_sim.config.yaml_io import load_simulation
 
 ROOT = Path(__file__).parents[2]
 simulation = load_simulation(ROOT / "examples" / "yaml_files" / "example.yaml")

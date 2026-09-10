@@ -10,8 +10,8 @@ single-detector example):
 import argparse
 from pathlib import Path
 
-from config.macro import write_macro
-from config.yaml_io import load_simulation
+from graace_sim.config.macro import write_macro
+from graace_sim.config.yaml_io import load_simulation
 
 default_config = Path(__file__).parents[2] / "examples" / "yaml_files" / "example.yaml"
 

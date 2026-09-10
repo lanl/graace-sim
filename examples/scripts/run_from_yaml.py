@@ -10,8 +10,8 @@ engine on PATH. Writes the macro, runs the engine, and lands the macro,
 import argparse
 from pathlib import Path
 
-from config.yaml_io import load_simulation
-from runner.run_simulation import run_simulation
+from graace_sim.config.yaml_io import load_simulation
+from graace_sim.runner.run_simulation import run_simulation
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load a simulation config and run it.")

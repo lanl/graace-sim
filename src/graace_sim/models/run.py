@@ -2,7 +2,7 @@
 
 from pydantic import Field
 
-from models.base import StrictModel
+from graace_sim.models.base import StrictModel
 
 
 class RunSettings(StrictModel):

@@ -6,7 +6,7 @@ count and seed). This model is only about invoking the compiled engine.
 
 from pydantic import Field, field_validator
 
-from models.base import StrictModel
+from graace_sim.models.base import StrictModel
 
 
 class SimRunner(StrictModel):

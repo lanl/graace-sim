@@ -10,20 +10,67 @@ Full documentation: [graace-sim.readthedocs.io](https://graace-sim.readthedocs.i
 
 GRAACE-SIM is a material-agnostic GEANT4 framework for modeling Prompt Gamma Activation Analysis (PGAA) experiments, enabling users to configure materials and geometries, run simulations, and generate prompt gamma data for experiment planning and analysis development.
 
-## Getting Started
+## Install with Pixi
 
-In order to run the simulation you need to have the pixi environment set up. Pixi can be installed via:
+Install Pixi if it is not already available:
 
-```
+```sh
 curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-Once pixi is installed, you can set up the GRAACE-SIM environment and build the geant4 simulation by running:
+Create a directory for your simulation project and initialize a Pixi workspace:
 
+```sh
+mkdir my-simulation
+cd my-simulation
+pixi init
 ```
-pixi run build-sim
+
+Before adding GRAACE-SIM, enable Pixi's package-build preview feature in the
+new `pixi.toml` file by adding this line under `[workspace]`:
+
+```toml
+preview = ["pixi-build"]
 ```
-This installs the `graace-sim` binary into the pixi environment's `bin`, so `which graace-sim` finds it.
+
+Add the GRAACE-SIM release you want. The tag pins the package version so later
+releases do not change an existing environment:
+
+```sh
+pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.0 graace-sim
+```
+
+Alternatively, replace the contents of `pixi.toml` with:
+
+```toml
+[workspace]
+name = "my-simulation"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+preview = ["pixi-build"]
+
+[dependencies]
+graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.0" }
+```
+
+Install the environment:
+
+```sh
+pixi install
+```
+
+Pixi builds the GEANT4 engine and installs it together with the Python package
+and its runtime dependencies. The package currently supports `osx-arm64` and
+`linux-64` Pixi platforms.
+
+The public Python interface is:
+
+```python
+from graace_sim import load_simulation, run_simulation
+
+graace_record = load_simulation("config.yaml")
+run_simulation(graace_record)
+```
 
 ## Running Examples
 

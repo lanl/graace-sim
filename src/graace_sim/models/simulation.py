@@ -2,15 +2,15 @@
 
 from pydantic import Field, model_validator
 
-from models.base import StrictModel
-from models.detector import Detector
-from models.metadata import Metadata
-from models.environment import WorkingEnvironment
-from models.run import RunSettings
-from models.runner import SimRunner
-from models.sample import Sample
-from models.shielding import Shielding
-from models.source import Source
+from graace_sim.models.base import StrictModel
+from graace_sim.models.detector import Detector
+from graace_sim.models.metadata import Metadata
+from graace_sim.models.environment import WorkingEnvironment
+from graace_sim.models.run import RunSettings
+from graace_sim.models.runner import SimRunner
+from graace_sim.models.sample import Sample
+from graace_sim.models.shielding import Shielding
+from graace_sim.models.source import Source
 
 
 class Simulation(StrictModel):

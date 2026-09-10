@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from models.environment import WorkingEnvironment
+from graace_sim.models.environment import WorkingEnvironment
 
 
 def test_default_layout():
