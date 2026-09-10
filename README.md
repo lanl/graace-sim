@@ -4,6 +4,7 @@
 
 # graace-sim
 
+[![CI](https://github.com/lanl/graace-sim/actions/workflows/validate.yml/badge.svg)](https://github.com/lanl/graace-sim/actions/workflows/validate.yml)
 [![Documentation Status](https://readthedocs.org/projects/graace-sim/badge/?version=latest)](https://graace-sim.readthedocs.io/en/latest/)
 
 Full documentation: [graace-sim.readthedocs.io](https://graace-sim.readthedocs.io/en/latest/)
