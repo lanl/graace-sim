@@ -26,6 +26,13 @@ cd my-simulation
 pixi init
 ```
 
+Before adding GRAACE-SIM, enable Pixi's package-build preview feature in the
+new `pixi.toml` file by adding this line under `[workspace]`:
+
+```toml
+preview = ["pixi-build"]
+```
+
 Add the GRAACE-SIM release you want. The tag pins the package version so later
 releases do not change an existing environment:
 
@@ -33,7 +40,7 @@ releases do not change an existing environment:
 pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.0 graace-sim
 ```
 
-Alternatively, add the dependency directly to `pixi.toml`:
+Alternatively, replace the contents of `pixi.toml` with:
 
 ```toml
 [workspace]
