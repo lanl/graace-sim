@@ -7,20 +7,6 @@ project(graace-sim)
 # skips that check. Do not remove — the build fails to configure without it.
 set(GEANT4_HAVE_H5_HAVE_THREADSAFE TRUE CACHE INTERNAL "pre-seed a GEANT4 config probe")
 
-# Geant4 asks CMake to find Expat while its package file is being loaded. On
-# Linux, CMake can otherwise choose the older system library before it checks the
-# active Pixi environment. Seed both paths first so the build uses the locked
-# dependency on every supported platform.
-if(DEFINED ENV{CONDA_PREFIX})
-  find_path(EXPAT_INCLUDE_DIR NAMES expat.h
-    PATHS "$ENV{CONDA_PREFIX}/include" NO_DEFAULT_PATH)
-  find_library(EXPAT_LIBRARY NAMES expat
-    PATHS "$ENV{CONDA_PREFIX}/lib" NO_DEFAULT_PATH)
-  set(EXPAT_INCLUDE_DIR "${EXPAT_INCLUDE_DIR}" CACHE PATH
-    "Pixi Expat include directory" FORCE)
-  set(EXPAT_LIBRARY "${EXPAT_LIBRARY}" CACHE FILEPATH
-    "Pixi Expat library" FORCE)
-endif()
 
 find_package(Geant4 REQUIRED ui_all vis_all)
 include(${Geant4_USE_FILE})

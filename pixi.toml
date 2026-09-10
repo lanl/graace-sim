@@ -35,7 +35,7 @@ cmd = "pytest"
 
 [tasks.build-sim]
 description = "Compile the GEANT4 engine and install graace-sim onto PATH"
-cmd = "cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_PREFIX_PATH=$CONDA_PREFIX -DHDF5_ROOT=$CONDA_PREFIX && cmake --build build && cmake --install build"
+cmd = "expat_library=$(find \"$CONDA_PREFIX/lib\" -maxdepth 1 -name 'libexpat.*' -print -quit) && cmake -S sim -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_PREFIX_PATH=$CONDA_PREFIX -DEXPAT_INCLUDE_DIR=$CONDA_PREFIX/include -DEXPAT_LIBRARY=$expat_library -DHDF5_ROOT=$CONDA_PREFIX && cmake --build build && cmake --install build"
 
 [tasks.clean-sim]
 description = "Remove the build directory"
