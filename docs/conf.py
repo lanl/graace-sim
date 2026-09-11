@@ -28,7 +28,11 @@ myst_heading_anchors = 3
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "furo"
-html_static_path = ["_static"]
+html_static_path = ["_static", "images"]
+html_theme_options = {
+    "light_logo": "Banner.jpg",
+    "dark_logo": "Banner.jpg",
+}
 
 # Keep the generated model pages focused on fields and descriptions.
 autodoc_pydantic_model_show_json = False
