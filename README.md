@@ -37,7 +37,7 @@ preview = ["pixi-build"]
 Add the current release. The tag keeps later releases from changing this environment:
 
 ```sh
-pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.1 graace-sim
+pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.2 graace-sim
 ```
 
 Or replace the contents of `pixi.toml` with:
@@ -50,7 +50,7 @@ platforms = ["osx-arm64", "linux-64"]
 preview = ["pixi-build"]
 
 [dependencies]
-graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.1" }
+graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.2" }
 ```
 
 Install the environment:
