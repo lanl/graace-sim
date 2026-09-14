@@ -49,18 +49,39 @@ def _draw_progress(current: int, total: int) -> None:
         sys.stderr.write("\n")
 
 
-def _verify_results(config: Simulation) -> None:
-    """Check each detector's results directory holds at least one Parquet file."""
+def _verify_results(config: Simulation, log_file: Path) -> None:
+    """Check each detector's results directory holds at least one Parquet file.
+
+    An empty directory means the engine recorded no gamma hits, so the error
+    names the most likely reason: with no sample there is nothing for the
+    neutrons to hit, and with one it is usually the detector placement or the
+    neutron count that needs changing.
+    """
     results = config.environment.results_directory
     missing = [
         detector.name
         for detector in config.detectors
         if not list((results / detector.name).glob("*.parquet"))
     ]
-    if missing:
-        raise FileNotFoundError(
-            f"engine finished but no results were written for: {', '.join(missing)}"
+    if not missing:
+        return
+
+    if config.sample is None:
+        cause = (
+            "This configuration has no `sample`, so the neutrons travel through "
+            "air and make almost no gamma rays. Add a `sample` for them to hit."
         )
+    else:
+        cause = (
+            "Check that each detector sits where gamma rays from the sample will "
+            f"reach it, and that `run.neutrons` ({config.run.neutrons}) is large "
+            "enough to record a hit."
+        )
+    raise FileNotFoundError(
+        f"engine finished but no results were written for: {', '.join(missing)}. "
+        f"The engine ran without error, so it recorded no gamma hits. {cause} "
+        f"The engine output is in {log_file}."
+    )
 
 
 def run_simulation(config: Simulation) -> Path:
@@ -98,7 +119,7 @@ def run_simulation(config: Simulation) -> Path:
         raise RuntimeError(f"engine exited with code {return_code}; see {log_file}")
 
     if config.runner.verify_output:
-        _verify_results(config)
+        _verify_results(config, log_file)
 
     logger.info("Run complete: {}", config.environment.run_directory)
     return config.environment.run_directory

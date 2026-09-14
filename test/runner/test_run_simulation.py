@@ -115,8 +115,26 @@ def test_verify_output_raises_when_results_missing(tmp_path, monkeypatch):
     # No on_wait, so the fake engine leaves the results directories empty.
     _install_engine(monkeypatch, lambda: FakeProcess(["done\n"]))
 
-    with pytest.raises(FileNotFoundError, match="no results were written"):
+    with pytest.raises(FileNotFoundError, match="no results were written") as error:
         runner.run_simulation(config)
+
+    # The example config has a sample, so the message points at the placement and
+    # the neutron count instead, and names the log to read.
+    message = str(error.value)
+    assert "run.neutrons" in message
+    assert str(config.environment.log_directory / "run.log") in message
+
+
+def test_verify_output_message_names_the_missing_sample(tmp_path, monkeypatch):
+    """The most common cause of an empty run: no sample for the neutrons to hit."""
+    config = _config(tmp_path)
+    config.sample = None
+    _install_engine(monkeypatch, lambda: FakeProcess(["done\n"]))
+
+    with pytest.raises(FileNotFoundError, match="no results were written") as error:
+        runner.run_simulation(config)
+
+    assert "no `sample`" in str(error.value)
 
 
 def test_verify_output_passes_when_results_present(tmp_path, monkeypatch):
