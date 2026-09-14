@@ -16,6 +16,16 @@ source:
     type: mono
     mono_mev: 14.1
 
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 10
+  height_mm: 20
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
+
 detectors:
   - name: hpge
     type: HPGe
@@ -32,7 +42,10 @@ metadata:
 ```
 
 Required top-level fields are `source`, `detectors`, `run`, and `metadata`.
-`sample` is optional. `shielding`, `environment`, and `runner` have defaults.
+`sample` is optional in the schema, but the sample is what the neutrons hit to
+make gamma rays, so a run without one records no hits unless something else in
+the beam path produces them. `shielding`, `environment`, and `runner` have
+defaults.
 Python and YAML fields use `snake_case`; GEANT4 command names use the spelling
 registered by the C++ messenger, such as `/source/energyType`.
 

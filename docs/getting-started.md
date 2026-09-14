@@ -56,7 +56,9 @@ The package includes the `graace_sim` Python interface, the `graace-sim` executa
 
 ### Create and run a configuration
 
-A configuration needs a source, at least one detector, run settings, and run metadata. For a small first run, create `config.yaml`:
+A configuration needs a source, at least one detector, run settings, and run metadata. It also needs a `sample`: the sample is the material the neutrons hit to make the gamma rays the detectors record. Without one the neutrons travel through air, no gamma rays are made, and the run finishes with no output.
+
+For a small first run, create `config.yaml`:
 
 ```yaml
 source:
@@ -67,6 +69,16 @@ source:
   energy:
     type: mono
     mono_mev: 14.1
+
+sample:
+  composition:
+    density_g_cm3: 7.87
+    elements:
+      - {symbol: Fe, mass_fraction: 1.0}
+  shape: cylinder
+  size_mm: 10      # cylinder radius
+  height_mm: 20    # cylinder height
+  position_mm: {x_mm: 0, y_mm: 0, z_mm: 0}
 
 detectors:
   - name: hpge
@@ -99,6 +111,8 @@ G4VIS_DEFAULT_DRIVER=TSG_OFFSCREEN pixi run --locked python run.py
 ```
 
 The offscreen setting is useful on a computer without an interactive display. You can omit it when your graphics setup provides an appropriate GEANT4 driver.
+
+This run finishes in a few seconds and records a few dozen gamma hits, which is enough to confirm the installation works. A measurement you intend to analyze needs many more neutrons: the configurations in `examples/yaml_files/` use 10,000 to 10,000,000.
 
 ## Clone the repository and use its Pixi workspace
 
@@ -188,7 +202,7 @@ Start with the example YAML or the minimal configuration above. The required top
 - `run`: neutron count and optional random seed;
 - `metadata`: author, date, and description.
 
-`sample` is optional. `shielding`, `environment`, and `runner` have defaults. Positions and sizes are in millimeters, source energy is in MeV, density is in g/cm³, detector energy resolution is in keV, and source timing is in ns. See the [Python model guide](architecture/python/models.md) for the available fields and defaults.
+`sample` is optional in the schema, but a run without one records no gamma hits unless something else in the beam path produces them, so include a sample for a normal measurement. `shielding`, `environment`, and `runner` have defaults. Positions and sizes are in millimeters, source energy is in MeV, density is in g/cm³, detector energy resolution is in keV, and source timing is in ns. See the [Python model guide](architecture/python/models.md) for the available fields and defaults.
 
 The Python models reject unknown keys and invalid values before the engine starts. Keep the YAML file with the generated macro when you need to reproduce or compare a run; the runner does not copy the validated configuration into the output directory.
 
@@ -200,7 +214,7 @@ The Python models reject unknown keys and invalid values before the engine start
 | Pixi cannot build the Git dependency | Confirm that `preview = ["pixi-build"]` is under `[workspace]`, then run `pixi install` again. |
 | Pydantic validation error | Check the field named in the error. Names use the YAML path, such as `source.energy.mono_mev`. |
 | No geometry picture | Set `G4VIS_DEFAULT_DRIVER=TSG_OFFSCREEN`, or inspect the log. A run can finish without a geometry picture when graphics support is unavailable. |
-| Missing Parquet output | Inspect `logs/run.log` and confirm that each detector has a unique name. The default output check requires at least one Parquet file for every detector. |
+| `no results were written` | The engine ran without error but recorded no gamma hits, so no Parquet file was written. Confirm the configuration has a `sample` for the neutrons to hit, that each detector sits where gamma rays from the sample will reach it, and that `run.neutrons` is large enough to record a hit. The engine's own count is in `logs/run.log`, on the `SimIO: wrote N gamma hits` lines. |
 | Spectrum source falls back to mono energy | Check that `source.energy.spectrum_file` is readable from the process working directory and contains `energy_mev intensity` pairs, one per line. |
 
 ## Next steps
