@@ -11,7 +11,7 @@ If Pixi is not installed, follow the [Pixi installation instructions](https://pi
 
 ## Use a released package in a new Pixi project
 
-This path keeps your simulation configuration and results separate from the GRAACE-SIM source code. The instructions below use the `v0.2.2` release. Replace that tag with a later release when one is available.
+This path keeps your simulation configuration and results separate from the GRAACE-SIM source code. The instructions below use the `v0.2.3` release. Replace that tag with a later release when one is available.
 
 Create a directory for your project and initialize a Pixi workspace:
 
@@ -30,7 +30,7 @@ preview = ["pixi-build"]
 Then add the pinned GRAACE-SIM release:
 
 ```sh
-pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.2 graace-sim
+pixi add --git https://github.com/lanl/graace-sim.git --tag v0.2.3 graace-sim
 ```
 
 The command adds the dependency to `pixi.toml`. If you prefer to edit the file yourself, the relevant parts look like this:
@@ -43,7 +43,7 @@ platforms = ["osx-arm64", "linux-64"]
 preview = ["pixi-build"]
 
 [dependencies]
-graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.2" }
+graace-sim = { git = "https://github.com/lanl/graace-sim.git", tag = "v0.2.3" }
 ```
 
 Install the environment:
@@ -127,7 +127,7 @@ pixi install
 For a reproducible released checkout, clone the release tag instead:
 
 ```sh
-git clone --branch v0.2.2 https://github.com/lanl/graace-sim.git
+git clone --branch v0.2.3 https://github.com/lanl/graace-sim.git
 cd graace-sim
 pixi install
 ```
