@@ -1,0 +1,183 @@
+// Overview diagram for the poster figure. Render with:
+//   dot -Tpdf graace-sim-architecture.dot -o graace-sim-architecture.pdf
+//
+// Four groups flow left to right: User Inputs, Python Control Layer,
+// GEANT4 Simulation Core, Outputs. The one edge that runs backward
+// (GEANT4 returning run status to Python) uses constraint=false so it
+// doesn't fight the left-to-right order.
+
+digraph graace_sim_architecture {
+    rankdir=LR;
+    nodesep=0.0;
+    compound=true;
+    bgcolor="white";
+    fontname="Helvetica";
+    label=<
+        <TABLE BORDER="0" CELLBORDER="0">
+            <TR><TD><FONT POINT-SIZE="28" FACE="Helvetica-Bold" COLOR="#14325E">GRAACE-SIM: A user friendly PGAA/NAA simulation framework</FONT></TD></TR>
+            <TR><TD><FONT POINT-SIZE="16" COLOR="gray40">Modular | Configurable | Reproducible</FONT></TD></TR>
+        </TABLE>
+    >;
+    labelloc="t";
+    node [shape=plaintext, fontname="Helvetica"];
+    edge [fontname="Helvetica", fontsize=12, color="gray35"];
+
+    // ---- User Inputs ------------------------------------------------
+    subgraph cluster_inputs {
+        label=<<FONT POINT-SIZE="16" FACE="Helvetica-Bold" COLOR="#14325E">User Inputs</FONT>>;
+        style="rounded";
+        color="#14325E";
+        bgcolor="#F3F8FD";
+
+        exp [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" CELLPADDING="5" STYLE="ROUNDED" COLOR="#1F4E8C" BGCOLOR="white">
+                <TR><TD ALIGN="LEFT"><FONT FACE="Helvetica-Bold" COLOR="#1F4E8C">Experiment Definition</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT">• Source parameters</TD></TR>
+                <TR><TD ALIGN="LEFT">• Sample properties &amp; geometry</TD></TR>
+                <TR><TD ALIGN="LEFT">• Detector configuration</TD></TR>
+                <TR><TD ALIGN="LEFT">• Shielding &amp; surroundings</TD></TR>
+                <TR><TD ALIGN="LEFT">• Run settings</TD></TR>
+            </TABLE>
+        >];
+        lib [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" CELLPADDING="5" STYLE="ROUNDED" COLOR="#1F4E8C" BGCOLOR="white">
+                <TR><TD ALIGN="LEFT"><FONT FACE="Helvetica-Bold" COLOR="#1F4E8C">Predefined Libraries</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT">• Sources</TD></TR>
+                <TR><TD ALIGN="LEFT">• Detectors</TD></TR>
+                <TR><TD ALIGN="LEFT">• Materials</TD></TR>
+                <TR><TD ALIGN="LEFT">• Geometries</TD></TR>
+                <TR><TD ALIGN="LEFT">• Shielding</TD></TR>
+            </TABLE>
+        >];
+        user [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" CELLPADDING="5" STYLE="ROUNDED" COLOR="#1F4E8C" BGCOLOR="white">
+                <TR><TD ALIGN="LEFT"><FONT FACE="Helvetica-Bold" COLOR="#1F4E8C">User-Defined Inputs</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT">• Custom geometries</TD></TR>
+                <TR><TD ALIGN="LEFT">• Materials</TD></TR>
+                <TR><TD ALIGN="LEFT">• Detectors</TD></TR>
+                <TR><TD ALIGN="LEFT">• Run settings</TD></TR>
+            </TABLE>
+        >];
+
+        exp -> lib -> user [style=invis, constraint=false, weight=20];
+        { rank=min; exp; lib; user; }
+    }
+
+    // ---- Python Control Layer ---------------------------------------
+    subgraph cluster_python {
+        label=<
+            <FONT POINT-SIZE="16" FACE="Helvetica-Bold" COLOR="#1B5E20">Python Control Layer</FONT><BR/>
+            <FONT POINT-SIZE="11" COLOR="#1B5E20"><I>Configuration - Validation - Execution Management - Post-Processing</I></FONT>
+        >;
+        style="rounded";
+        color="#1B5E20";
+        bgcolor="#EEF7EF";
+
+        parse   [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#2E7D32" BGCOLOR="white"><TR><TD><FONT COLOR="#1B5E20">Parse &amp; Validate Inputs</FONT></TD></TR></TABLE>>];
+        geom    [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#2E7D32" BGCOLOR="white"><TR><TD><FONT COLOR="#1B5E20">Build Geometry &amp; Components</FONT></TD></TR></TABLE>>];
+        manage  [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#2E7D32" BGCOLOR="white"><TR><TD><FONT COLOR="#1B5E20">Manage Runs (Batch / HPC)</FONT></TD></TR></TABLE>>];
+        collect [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#2E7D32" BGCOLOR="white"><TR><TD><FONT COLOR="#1B5E20">Collect &amp; Manage Outputs</FONT></TD></TR></TABLE>>];
+    }
+
+    // ---- GEANT4 Simulation Core ---------------------------------------
+    subgraph cluster_geant4 {
+        label=<
+            <FONT POINT-SIZE="16" FACE="Helvetica-Bold" COLOR="#4B3782">GEANT4 Simulation Core</FONT><BR/>
+            <FONT POINT-SIZE="11" COLOR="#4B3782"><I>Particle Transport &amp; Detector Response</I></FONT>
+        >;
+        style="rounded";
+        color="#4B3782";
+        bgcolor="#F1EEF9";
+
+        neutron   [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#5E4B8B" BGCOLOR="white"><TR><TD><FONT COLOR="#4B3782">Neutron Interactions</FONT></TD></TR></TABLE>>];
+        gamma     [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#5E4B8B" BGCOLOR="white"><TR><TD><FONT COLOR="#4B3782">Gamma Production (Activation)</FONT></TD></TR></TABLE>>];
+        transport [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#5E4B8B" BGCOLOR="white"><TR><TD><FONT COLOR="#4B3782">Particle Transport (EM + Hadronic)</FONT></TD></TR></TABLE>>];
+        detector  [label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="6" STYLE="ROUNDED" COLOR="#5E4B8B" BGCOLOR="white"><TR><TD><FONT COLOR="#4B3782">Detector Response (HPGe, etc.)</FONT></TD></TR></TABLE>>];
+    }
+
+    // ---- Outputs -------------------------------------------------------
+    subgraph cluster_outputs {
+        label=<<FONT POINT-SIZE="16" FACE="Helvetica-Bold" COLOR="#8A5A00">Outputs</FONT>>;
+        style="rounded";
+        color="#8A5A00";
+        bgcolor="#FDF6E6";
+
+        results [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" CELLPADDING="5" STYLE="ROUNDED" COLOR="#C8960B" BGCOLOR="white">
+                <TR><TD ALIGN="LEFT"><FONT FACE="Helvetica-Bold" COLOR="#8A5A00">Simulation Results</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT">• Gamma-ray spectra</TD></TR>
+                <TR><TD ALIGN="LEFT">• Pulse height spectra</TD></TR>
+                <TR><TD ALIGN="LEFT">• Neutron flux maps</TD></TR>
+                <TR><TD ALIGN="LEFT">• Detector responses</TD></TR>
+                <TR><TD ALIGN="LEFT">• Run metadata</TD></TR>
+            </TABLE>
+        >];
+        viz [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" CELLPADDING="5" STYLE="ROUNDED" COLOR="#C8960B" BGCOLOR="white">
+                <TR><TD ALIGN="LEFT"><FONT FACE="Helvetica-Bold" COLOR="#8A5A00">Visualization</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT">• Counts vs. energy (keV)</TD></TR>
+                <TR><TD ALIGN="LEFT">• Multi-run spectrum overlays</TD></TR>
+                <TR><TD ALIGN="LEFT">• Self-shielding ratio plots</TD></TR>
+                <TR><TD ALIGN="LEFT">• Detector geometry pictures</TD></TR>
+                <TR><TD ALIGN="LEFT">• Geometry with particle tracks</TD></TR>
+            </TABLE>
+        >];
+        analysis [label=<
+            <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" CELLPADDING="5" STYLE="ROUNDED" COLOR="#C8960B" BGCOLOR="white">
+                <TR><TD ALIGN="LEFT"><FONT FACE="Helvetica-Bold" COLOR="#8A5A00">Analysis &amp; Metrics</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT">• Sensitivity</TD></TR>
+                <TR><TD ALIGN="LEFT">• Minimum flux estimates</TD></TR>
+                <TR><TD ALIGN="LEFT">• Background estimates</TD></TR>
+                <TR><TD ALIGN="LEFT">• Uncertainty</TD></TR>
+            </TABLE>
+        >];
+
+        results -> viz -> analysis [style=invis, constraint=false, weight=20];
+        { rank=max; results; viz; analysis; }
+    }
+
+
+    // ---- Flow between groups -------------------------------------------
+    // Python Control Layer and GEANT4 Simulation Core draw as a stacked pair
+    // in one column, between Inputs and Outputs. A cross-cluster `rank=same`
+    // pulls nodes out of their cluster in this Graphviz version, so the
+    // alignment instead comes from two invisible, constraint=true edges that
+    // give both clusters the same lower-bound rank (from Inputs) and the
+    // same upper-bound rank (into Outputs).
+    // Visible connector arrows are removed for now (temporary; will be added
+    // back later). These edges stay in place, invisibly, so the layout and
+    // alignment don't change when the arrows return.
+    // Which Inputs node anchors to which middle-column node determines both
+    // the relative top-to-bottom order of the two middle clusters, and (since
+    // edge weight has no effect on position here - tested extensively) how
+    // closely the Python Control Layer's top row lines up with the Inputs/
+    // Outputs top row. Of all 9 (source -> geom, source -> neutron) pairings
+    // tested, lib->geom / user->neutron keeps Python Control Layer above
+    // GEANT4 Simulation Core with the correct internal ordering in both
+    // clusters, and comes closest to lining up collect's row with exp/viz's
+    // row (residual gap ~0.2in, down from ~1.25in with the first pairing
+    // that gave the correct stacking order).
+    lib -> geom [style=invis];
+    user -> neutron [style=invis];
+    collect -> results [style=invis];
+    detector -> results [style=invis];
+
+    // Stacking order within the shared middle column: this single chain
+    // (constraint=false, so it only affects top-to-bottom order, not rank)
+    // fixes the sequence within each cluster (neutron..detector bottom-up,
+    // then parse..collect bottom-up).
+    neutron -> gamma -> transport -> detector -> parse -> geom -> manage -> collect [style=invis, constraint=false];
+
+    // Pull each Inputs box into the same row as its Outputs counterpart, so
+    // the two clusters line up vertically. These need constraint=true to
+    // influence position (constraint=false edges are only used for crossing
+    // reduction, not for the position pass), but minlen must equal the
+    // existing 2-rank gap between the min and max ranks - otherwise the
+    // weight puts pressure on that gap to shrink, collapsing the Python/
+    // GEANT4 column into the Outputs column instead of just aligning rows.
+    user -> analysis [style=invis, constraint=true, minlen=2, weight=50];
+    exp -> viz [style=invis, constraint=true, minlen=2, weight=50];
+    lib -> results [style=invis, constraint=true, minlen=2, weight=50];
+
+    analysis -> exp [style=invis, constraint=false];
+}
