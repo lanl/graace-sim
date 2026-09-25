@@ -17,3 +17,7 @@ data/*
 
 # Built documentation
 docs/_build/
+
+# ignore maven folder and files
+maven_files/
+maven_files/*
